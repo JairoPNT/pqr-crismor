@@ -28,7 +28,8 @@ const createTicket = async (req, res) => {
                 phone,
                 email,
                 description,
-                status: 'INITIAL',
+                status: 'INICIADO', // Spanish: INICIADO, EN_SEGUIMIENTO, FINALIZADO
+                revenue: 70000,   // Fixed commission
                 media: {
                     create: req.files ? req.files.map(file => ({ url: file.path })) : [],
                 },
@@ -91,7 +92,7 @@ const getTicketByPublicId = async (req, res) => {
 
 const addFollowUp = async (req, res) => {
     const { id } = req.params;
-    const { content, diagnosis, protocol, bonusInfo, status, revenue } = req.body;
+    const { content, diagnosis, protocol, bonusInfo, status } = req.body;
 
     if (!diagnosis) {
         return res.status(400).json({ message: 'El diagnóstico es obligatorio para agregar un seguimiento' });
@@ -108,13 +109,10 @@ const addFollowUp = async (req, res) => {
             },
         });
 
-        // Update ticket status and revenue if provided
-        const updateData = { status: status || 'FOLLOW_UP' };
-        if (revenue) updateData.revenue = parseFloat(revenue);
-
+        // Update ticket status (revenue is now fixed at creation)
         const updatedTicket = await prisma.ticket.update({
             where: { id },
-            data: updateData,
+            data: { status: status || 'EN_SEGUIMIENTO' },
         });
 
         // Trigger n8n notification for follow-up

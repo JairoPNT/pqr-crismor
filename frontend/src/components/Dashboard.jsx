@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
 
 const Dashboard = ({ user, onLogout }) => {
     const [activeTab, setActiveTab] = useState('new');
@@ -45,7 +46,7 @@ const Dashboard = ({ user, onLogout }) => {
                 animate={{ x: 0 }}
                 style={{ width: '280px', background: 'var(--primary-earth)', color: 'white', padding: '2rem', display: 'flex', flexDirection: 'column' }}
             >
-                <h2 style={{ color: 'white', marginBottom: '2rem' }}>Crismor PQR</h2>
+                <h2 style={{ color: 'white', marginBottom: '2rem' }}>PQR-Crismor</h2>
                 <div style={{ marginBottom: '3rem' }}>
                     <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Bienvenido,</p>
                     <p style={{ fontWeight: '600', fontSize: '1.2rem' }}>{user.username}</p>
@@ -55,6 +56,7 @@ const Dashboard = ({ user, onLogout }) => {
                     <TabButton active={activeTab === 'new'} onClick={() => setActiveTab('new')} label="Nuevo Ticket" />
                     <TabButton active={activeTab === 'follow'} onClick={() => setActiveTab('follow')} label="Seguimiento" />
                     <TabButton active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} label="Estadísticas" />
+                    <TabButton active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} label="Informes" />
                 </nav>
 
                 <button
@@ -79,6 +81,7 @@ const Dashboard = ({ user, onLogout }) => {
                         {activeTab === 'new' && <NewTicketForm user={user} onSuccess={() => { fetchTickets(); setActiveTab('follow'); }} />}
                         {activeTab === 'follow' && <TicketList tickets={tickets} user={user} onUpdate={fetchTickets} />}
                         {activeTab === 'stats' && <StatsView stats={stats} />}
+                        {activeTab === 'reports' && <ReportsView tickets={tickets} user={user} />}
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -236,7 +239,7 @@ const TicketList = ({ tickets, user, onUpdate }) => {
 };
 
 const FollowUpForm = ({ ticket, user, onDone }) => {
-    const [form, setForm] = useState({ content: '', diagnosis: '', protocol: '', bonusInfo: '', status: ticket.status, revenue: '' });
+    const [form, setForm] = useState({ content: '', diagnosis: '', protocol: '', bonusInfo: '', status: ticket.status });
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -258,7 +261,7 @@ const FollowUpForm = ({ ticket, user, onDone }) => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                     <label className="form-label">Diagnóstico</label>
-                    <input className="input-field" value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} />
+                    <input className="input-field" value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} required />
                 </div>
                 <div className="form-group">
                     <label className="form-label">Bonificación/Obsequio</label>
@@ -269,24 +272,99 @@ const FollowUpForm = ({ ticket, user, onDone }) => {
                 <label className="form-label">Protocolo de Procedimiento</label>
                 <textarea className="input-field" style={{ height: '80px' }} value={form.protocol} onChange={e => setForm({ ...form, protocol: e.target.value })} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                    <label className="form-label">Estado</label>
-                    <select className="input-field" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                        <option value="INITIAL">Iniciado</option>
-                        <option value="FOLLOW_UP">En Seguimiento</option>
-                        <option value="FINALIZED">Finalizado</option>
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label className="form-label">Ingreso Generado ($)</label>
-                    <input className="input-field" type="number" value={form.revenue} onChange={e => setForm({ ...form, revenue: e.target.value })} />
-                </div>
+            <div className="form-group">
+                <label className="form-label">Cambiar Estado</label>
+                <select className="input-field" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                    <option value="INICIADO">Iniciado</option>
+                    <option value="EN_SEGUIMIENTO">En Seguimiento</option>
+                    <option value="FINALIZADO">Finalizado</option>
+                </select>
             </div>
             <button type="submit" className="btn-primary" disabled={submitting} style={{ width: '100%', padding: '1rem', marginTop: '1rem' }}>
-                {submitting ? 'Guardando...' : 'Guardar Seguimiento'}
+                {submitting ? 'Guardando...' : 'Guardar Gestión'}
             </button>
         </form>
+    );
+};
+
+const ReportsView = ({ tickets, user }) => {
+    const [days, setDays] = useState(30);
+    const [filteredTickets, setFilteredTickets] = useState([]);
+
+    useEffect(() => {
+        const now = new Date();
+        const pastDate = new Date();
+        pastDate.setDate(now.getDate() - days);
+
+        const filtered = tickets.filter(t => new Date(t.createdAt) >= pastDate);
+        setFilteredTickets(filtered);
+    }, [days, tickets]);
+
+    const totalCommission = filteredTickets.length * 70000;
+
+    const generatePDF = () => {
+        const doc = new jsPDF();
+        const now = new Date().toLocaleString();
+
+        doc.setFontSize(22);
+        doc.text('Reporte de Gestión PQR-Crismor', 20, 30);
+
+        doc.setFontSize(12);
+        doc.text(`Generado por: ${user.username}`, 20, 50);
+        doc.text(`Fecha del Reporte: ${now}`, 20, 60);
+        doc.text(`Periodo: últimos ${days} días`, 20, 70);
+
+        doc.line(20, 75, 190, 75);
+
+        doc.setFontSize(14);
+        doc.text('Resumen del Periodo', 20, 90);
+        doc.text(`Casos gestionados: ${filteredTickets.length}`, 30, 100);
+        doc.text(`Valor total comisionado: $${totalCommission.toLocaleString()} COP`, 30, 110);
+
+        doc.setFontSize(10);
+        doc.text('Detalle de Casos:', 20, 130);
+        filteredTickets.forEach((t, i) => {
+            const y = 140 + (i * 10);
+            if (y < 280) {
+                doc.text(`${t.id} - ${t.patientName} (${t.city}) - ${new Date(t.createdAt).toLocaleDateString()}`, 25, y);
+            }
+        });
+
+        doc.save(`Reporte_PQR_${user.username}_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
+    return (
+        <div className="glass-card">
+            <h3 style={{ marginBottom: '2rem' }}>Generar Informe de Gestión</h3>
+            <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-end', marginBottom: '3rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Periodo (días atrás desde hoy)</label>
+                    <input
+                        type="number"
+                        className="input-field"
+                        style={{ width: '150px' }}
+                        value={days}
+                        onChange={e => setDays(parseInt(e.target.value) || 0)}
+                    />
+                </div>
+                <button className="btn-primary" onClick={generatePDF}>
+                    📥 Descargar Reporte PDF
+                </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div style={{ padding: '2rem', background: 'rgba(139, 115, 85, 0.05)', borderRadius: '15px' }}>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Casos en el periodo</p>
+                    <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>{filteredTickets.length}</p>
+                </div>
+                <div style={{ padding: '2rem', background: 'rgba(139, 115, 85, 0.05)', borderRadius: '15px' }}>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Total Comisionado</p>
+                    <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-earth)' }}>
+                        ${totalCommission.toLocaleString()}
+                    </p>
+                </div>
+            </div>
+        </div>
     );
 };
 
@@ -294,7 +372,7 @@ const StatsView = ({ stats }) => {
     if (!stats) return <div className="loading-placeholder" style={{ height: '200px' }}></div>;
     return (
         <div>
-            <h3 style={{ marginBottom: '2rem' }}>Resumen de Gestión</h3>
+            <h3 style={{ marginBottom: '2rem' }}>Resumen General de Gestión</h3>
             <div className="stats-grid">
                 <StatCard label="Total PQRs" value={stats.totalTickets} color="var(--primary-earth)" />
                 <StatCard label="Casos Finalizados" value={stats.resolvedTickets} color="var(--success)" />

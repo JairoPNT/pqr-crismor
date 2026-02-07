@@ -20,10 +20,10 @@ const PublicTracker = ({ onBack }) => {
             if (response.ok) {
                 setTicket(data);
             } else {
-                setError(data.message || 'Ticket no encontrado');
+                setError(data.message || 'Caso no encontrado');
             }
         } catch (err) {
-            setError('Error al consultar el ticket');
+            setError('Error al consultar el caso');
         } finally {
             setLoading(false);
         }
@@ -43,7 +43,7 @@ const PublicTracker = ({ onBack }) => {
                         type="text"
                         value={ticketId}
                         onChange={(e) => setTicketId(e.target.value)}
-                        placeholder="Nº de ticket (Ej: PQR1A2B)"
+                        placeholder="Nº de caso (Ej: PQR1A2B)"
                         required
                     />
                     <button type="submit" className="btn-primary" disabled={loading}>
