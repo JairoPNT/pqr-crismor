@@ -1,0 +1,100 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+
+const LoginPage = ({ onLogin, onBack }) => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            const response = await fetch('http://127.0.0.1:3000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                onLogin(data);
+            } else {
+                setError(data.message || 'Error al iniciar sesión');
+            }
+        } catch (err) {
+            setError('Error de conexión con el servidor');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '90vh' }}>
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card"
+                style={{ width: '100%', maxWidth: '400px' }}
+            >
+                <button onClick={onBack} style={{ background: 'none', color: 'var(--text-muted)', marginBottom: '1.5rem', padding: 0, fontWeight: 500 }}>
+                    ← Volver
+                </button>
+                <h2 style={{ marginBottom: '2rem', textAlign: 'center' }}>Acceso Gestor</h2>
+
+                <form onSubmit={handleSubmit}>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            style={{ color: 'var(--error)', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.9rem', padding: '0.5rem', background: 'rgba(217, 83, 79, 0.1)', borderRadius: '10px' }}
+                        >
+                            {error}
+                        </motion.div>
+                    )}
+
+                    <div className="form-group">
+                        <label className="form-label">Usuario</label>
+                        <input
+                            type="text"
+                            className="input-field"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Introduce tu usuario"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '2.5rem' }}>
+                        <label className="form-label">Contraseña</label>
+                        <input
+                            type="password"
+                            className="input-field"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            required
+                        />
+                    </div>
+
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        className="btn-primary"
+                        disabled={loading}
+                        style={{ width: '100%', padding: '1.2rem' }}
+                    >
+                        {loading ? 'Validando...' : 'Entrar al Sistema'}
+                    </motion.button>
+                </form>
+            </motion.div>
+        </div>
+    );
+};
+
+export default LoginPage;

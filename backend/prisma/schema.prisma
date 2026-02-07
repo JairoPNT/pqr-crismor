@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   // "SUPERADMIN", "GESTOR"
+  createdAt DateTime @default(now())
+}
+
+model Ticket {
+  id             String      @id // Unique generated code
+  patientName    String
+  contactMethod  String
+  city           String
+  phone          String
+  email          String
+  description    String
+  status         String      @default("INITIAL") // INITIAL, FOLLOW_UP, FINALIZED
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  followUps      FollowUp[]
+  media          Media[]
+  revenue        Float?
+}
+
+model FollowUp {
+  id           Int      @id @default(autoincrement())
+  ticketId     String
+  ticket       Ticket   @relation(fields: [ticketId], references: [id])
+  content      String
+  diagnosis    String?
+  protocol     String?
+  bonusInfo    String?
+  createdAt    DateTime @default(now())
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  url       String   // Local path or URL
+  createdAt DateTime @default(now())
+}
