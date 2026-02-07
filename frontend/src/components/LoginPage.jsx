@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import logoSkinHealth from '../assets/logo_skinhealth.png';
 
 const LoginPage = ({ onLogin, onBack }) => {
     const [username, setUsername] = useState('');
@@ -46,7 +47,7 @@ const LoginPage = ({ onLogin, onBack }) => {
                 </button>
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <img
-                        src="/src/assets/logo_skinhealth.png"
+                        src={logoSkinHealth}
                         alt="SkinHealth Logo"
                         style={{ width: '120px', marginBottom: '1rem' }}
                         onError={(e) => { e.target.style.display = 'none'; }}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import logoSkinHealth from '../assets/logo_skinhealth.png';
 
 const WelcomePage = ({ onNavigate }) => {
     return (
@@ -12,7 +13,7 @@ const WelcomePage = ({ onNavigate }) => {
                 style={{ padding: '4rem', maxWidth: '800px', margin: '0 auto' }}
             >
                 <img
-                    src="/src/assets/logo_skinhealth.png"
+                    src={logoSkinHealth}
                     alt="SkinHealth Logo"
                     style={{ width: '180px', marginBottom: '2.5rem' }}
                     onError={(e) => { e.target.style.display = 'none'; }}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
+import logoSkinHealth from '../assets/logo_skinhealth.png';
 
 const Dashboard = ({ user: initialUser, onLogout }) => {
     const [user, setUser] = useState(initialUser);
@@ -66,7 +67,7 @@ const Dashboard = ({ user: initialUser, onLogout }) => {
             >
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2.5rem' }}>
                     <img
-                        src="/src/assets/logo_skinhealth.png"
+                        src={logoSkinHealth}
                         alt="SkinHealth Logo"
                         style={{ width: '120px', marginBottom: '1.5rem', filter: 'brightness(0) invert(1)' }}
                         onError={(e) => { e.target.style.display = 'none'; }}
