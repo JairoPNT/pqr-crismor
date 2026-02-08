@@ -53,7 +53,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 
 app.get('/', (req, res) => {
-    res.send('PQR-Crismor Backend is running');
+    res.send('CriisApp Backend is running');
 });
 
 // Health check to verify DB connection

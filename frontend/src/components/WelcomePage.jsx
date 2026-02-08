@@ -16,7 +16,7 @@ const WelcomePage = ({ onNavigate, logo, activeManagers = [] }) => {
                         <span className="material-symbols-outlined text-xl">spa</span>
                     </div>
                     <span className="font-serif text-2xl font-bold tracking-tight text-primary dark:text-white">
-                        PQRS CriisApp
+                        CriisApp
                     </span>
                 </div>
 
@@ -104,7 +104,7 @@ const WelcomePage = ({ onNavigate, logo, activeManagers = [] }) => {
             {/* Footer */}
             <footer className="w-full px-6 py-6 border-t border-primary/5 dark:border-white/5 bg-white/30 dark:bg-black/20 backdrop-blur-sm mt-auto relative z-10 transition-colors">
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    <p>© 2024 PQRS CriisApp <span className="mx-2 text-accent">•</span> Excelencia Dermatológica</p>
+                    <p>© 2024 CriisApp <span className="mx-2 text-accent">•</span> Excelance Dermatológica</p>
 
                     <div className="flex items-center gap-1.5 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-full border border-white/50 dark:border-white/10 shadow-sm overflow-hidden">
                         <div className="flex -space-x-2 mr-2">

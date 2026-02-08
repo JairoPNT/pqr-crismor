@@ -101,7 +101,7 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center mb-3 border border-white/10 shadow-inner overflow-hidden">
                         <img src={logoUrl || logoSkinHealth} alt="Logo" className="w-12 h-12 object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<span class="material-symbols-outlined text-4xl text-accent">spa</span>'; }} />
                     </div>
-                    <h2 className="font-serif text-2xl font-bold tracking-tight text-white">PQRS CriisApp</h2>
+                    <h2 className="font-serif text-2xl font-bold tracking-tight text-white">CriisApp</h2>
                     <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Panel Administrativo</p>
                 </div>
 
@@ -176,7 +176,7 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
                     <motion.div key={view} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="max-w-5xl mx-auto w-full">
                         {renderContent()}
                     </motion.div>
-                    <footer className="mt-12 text-center text-xs text-gray-400 pb-4">© 2024 PQRS CriisApp - Panel de Gestión v2.0</footer>
+                    <footer className="mt-12 text-center text-xs text-gray-400 pb-4">© 2024 CriisApp - Panel de Gestión v2.0</footer>
                 </div>
             </main>
         </div>
