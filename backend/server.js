@@ -14,7 +14,8 @@ const ticketRoutes = require('./src/routes/ticketRoutes');
 const allowedOrigins = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://pqr-crismor-pqr-frontend.tcnjej.easypanel.host'
+    'https://pqr-crismor-pqr-frontend.tcnjej.easypanel.host',
+    'https://pqr.nariionline.cloud'
 ];
 
 app.use(cors({
@@ -22,11 +23,16 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
-        // Allow exact matches or if the origin contains 'pqr-frontend' (covers www, http/s, etc.)
-        if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('pqr-frontend') || origin.includes('localhost')) {
+        // Check if the origin matches any of our allowed patterns
+        const isAllowed = allowedOrigins.includes(origin) ||
+            origin.includes('nariionline.cloud') ||
+            origin.includes('pqr-frontend') ||
+            origin.includes('localhost');
+
+        if (isAllowed) {
             callback(null, true);
         } else {
-            console.log('CORS Blocked:', origin); // Log for debugging if we could see it
+            console.log('CORS Blocked for origin:', origin);
             callback(new Error('Not allowed by CORS'));
         }
     },
