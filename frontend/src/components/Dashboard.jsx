@@ -695,7 +695,8 @@ const UserManagement = ({ user, users, onUpdate, isMobile }) => {
             const response = await fetch(`${API_URL}/api/auth/users/${editingUser.id}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${user.token}` },
-                body: data
+                body: data,
+                credentials: 'include'
             });
             if (response.ok) {
                 setEditingUser(null);
