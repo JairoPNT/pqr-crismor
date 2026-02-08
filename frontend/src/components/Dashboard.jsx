@@ -73,7 +73,7 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
     };
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
             {/* Mobile Actions Overlay */}
             {isMobile && !sidebarOpen && (
                 <div style={{ position: 'fixed', top: '1rem', left: '1rem', zIndex: 100, display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -336,7 +336,9 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile }) => {
                         >
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.3rem' }}>
-                                    <p style={{ fontWeight: '600', color: 'var(--primary-earth)', margin: 0 }}>{t.id}</p>
+                                    <p style={{ fontWeight: '600', color: 'var(--primary-earth)', margin: 0 }} title={t.id}>
+                                        {t.id.length > 8 ? t.id.substring(0, 8) + '...' : t.id}
+                                    </p>
                                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Gestor: {t.assignedTo?.username || 'Sin asignar'}</span>
                                 </div>
                                 <p style={{ fontWeight: '500', marginBottom: '0.3rem' }}>{t.patientName}</p>
@@ -585,7 +587,7 @@ const UserManagement = ({ user, users, onUpdate, isMobile }) => {
                 <h3 style={{ margin: 0 }}>Administración de Usuarios y Gestores</h3>
                 <button className="btn-primary" onClick={() => setIsCreating(true)}>+ Nuevo Gestor</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
                 {users.map(u => (
                     <motion.div key={u.id} className="glass-card" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: '1.5rem', padding: '1.5rem' }}>
                         {u.avatar ? (

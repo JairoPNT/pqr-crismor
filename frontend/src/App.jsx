@@ -34,7 +34,15 @@ function App() {
       case 'public':
         return <PublicTracker onBack={() => setView('welcome')} logo={logoUrl} />;
       case 'dashboard':
-        return user ? <Dashboard user={user} onLogout={() => { setUser(null); setView('welcome'); }} initialLogo={logoUrl} /> : setView('login');
+        return user ? (
+          <Dashboard
+            user={user}
+            onLogout={() => { setUser(null); setView('welcome'); }}
+            initialLogo={logoUrl}
+          />
+        ) : (
+          <WelcomePage onNavigate={setView} logo={logoUrl} />
+        );
       default:
         return <WelcomePage onNavigate={setView} logo={logoUrl} />;
     }
