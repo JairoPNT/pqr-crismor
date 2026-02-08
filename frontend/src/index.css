@@ -1,180 +1,145 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1a2e26;
+  /* Verde Bosque profundo para mejor contraste */
+  --color-primary-light: #2C4A3B;
+  /* El verde original para acentos */
+  --color-secondary: #6B8E23;
+  --color-accent: #C5A059;
+  --color-light: #F4F7F2;
+  --color-darkbg: #0d1f18;
+  --color-sidebar: #1F352A;
+
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Montserrat", sans-serif;
+
+  /* Replicating utility-like variables if needed */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+/* Habilitar modo oscuro por clase en Tailwind 4 */
+@variant dark (&:where(.dark, .dark *));
 
 :root {
-  --primary-earth: #295026;
-  --secondary-earth: #3a6b36;
-  --pale-green: #C1D8C3;
-  --light-bg: #F9F7F5;
-  --text-dark: #1e3a1c;
-  --text-muted: #666;
-  --glass-bg: rgba(255, 255, 255, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-hover: rgba(255, 255, 255, 0.6);
-  --shadow: 0 8px 32px 0 rgba(41, 80, 38, 0.1);
-  --shadow-hover: 0 12px 40px 0 rgba(41, 80, 38, 0.15);
-  --error: #d9534f;
-  --success: #5cb85c;
+  --primary-earth: #1a2e26;
+  --secondary-earth: #6B8E23;
+  --pale-green: #F4F7F2;
+  --accent: #C5A059;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
+/* --- ESTILOS MODO CLARO (Default) --- */
 body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--light-bg);
-  background-image: radial-gradient(circle at 10% 20%, rgba(193, 216, 195, 0.2) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(139, 115, 85, 0.1) 0%, transparent 40%);
-  color: var(--text-dark);
-  min-height: 100vh;
-  line-height: 1.6;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  color: var(--primary-earth);
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-button {
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
-  border-radius: 12px;
+  @apply bg-light text-primary min-h-screen transition-colors duration-500 font-sans;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(107, 142, 35, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(197, 160, 89, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(44, 74, 59, 0.05) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  box-shadow: var(--shadow);
-  padding: 2rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  @apply bg-white/45 backdrop-blur-lg border border-white/60 shadow-xl transition-all duration-300;
 }
 
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-md border border-white/80 shadow-md;
+}
+
+/* --- ESTILOS MODO OSCURO (.dark) --- */
+.dark body {
+  @apply bg-darkbg text-gray-200;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(44, 74, 59, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(197, 160, 89, 0.15) 0px, transparent 50%);
+}
+
+.dark .glass-card {
+  @apply bg-emerald-950/60 border-white/10 shadow-2xl;
+}
+
+.dark .glass-panel {
+  @apply bg-emerald-900/60 border-white/5 shadow-xl;
+}
+
+/* Hover general */
 .glass-card:hover {
-  background: var(--glass-hover);
-  box-shadow: var(--shadow-hover);
+  @apply -translate-y-1 bg-white/55;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+.dark .glass-card:hover {
+  @apply bg-emerald-900/70 border-accent/40 shadow-emerald-950/50;
 }
 
-.btn-primary {
-  background-color: var(--primary-earth);
-  color: white;
-  padding: 0.8rem 1.5rem;
-  font-weight: 600;
+/* Inputs specialized for Dashboard */
+.input-dashboard:focus {
+  @apply border-accent ring-4 ring-accent/10;
 }
 
-.btn-primary:hover {
-  background-color: var(--secondary-earth);
-  transform: translateY(-2px);
+/* Animaciones */
+.fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
 }
 
-.btn-outline {
-  background-color: transparent;
-  border: 2px solid var(--primary-earth);
-  color: var(--primary-earth);
-  padding: 0.8rem 1.5rem;
-  font-weight: 600;
-}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 
-.btn-outline:hover {
-  background-color: var(--primary-earth);
-  color: white;
-  transform: translateY(-2px);
-}
-
-.input-field {
-  width: 100%;
-  padding: 0.8rem 1rem;
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.7);
-  font-family: inherit;
-  font-size: 1rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: var(--primary-earth);
-  box-shadow: 0 0 0 4px rgba(139, 115, 85, 0.1);
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-dark);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin-bottom: 3rem;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-initial {
-  background-color: #e3f2fd;
-  color: #1976d2;
-}
-
-.status-follow_up {
-  background-color: #fff3e0;
-  color: #f57c00;
-}
-
-.status-finalized {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
-
-/* Animations for loading */
-@keyframes pulse {
-  0% {
+  to {
     opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-
-  100% {
-    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.loading-placeholder {
-  height: 20px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
-  animation: pulse 1.5s infinite;
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-slate-800;
+}
+
+/* Forzar Montserrat en números y elementos específicos */
+.font-montserrat,
+.stats-number {
+  font-family: "Montserrat", sans-serif !important;
+}
+
+/* Fix Autocomplete */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #1a2e26 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #0d1f18 inset !important;
+  -webkit-text-fill-color: white !important;
 }

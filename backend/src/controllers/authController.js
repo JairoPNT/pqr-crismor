@@ -36,17 +36,38 @@ const login = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-    const { username, name, email, phone, avatar, password } = req.body;
     try {
-        const updateData = { username, name, email, phone, avatar };
-        if (password) {
-            updateData.password = await hashPassword(password);
+        const body = req.body || {};
+        let { username, name, email, phone, avatar, password, newPassword } = body;
+        const passToHash = password || newPassword;
+
+        console.log('--- ACTUALIZACIÓN DE PERFIL ---');
+        console.log('Cuerpo de la petición:', { ...req.body, password: passToHash ? '******' : undefined });
+
+        if (req.file) {
+            console.log('Archivo recibido:', req.file);
+            avatar = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`;
         }
+
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        if (phone) updateData.phone = phone;
+        if (avatar) updateData.avatar = avatar;
+
+        if (passToHash) {
+            updateData.password = await hashPassword(passToHash);
+        }
+
+        console.log('Datos a actualizar en BD:', { ...updateData, password: updateData.password ? '******' : undefined });
 
         const updatedUser = await prisma.user.update({
             where: { id: req.user.id },
             data: updateData
         });
+
+        console.log('Usuario actualizado con éxito');
 
         res.json({
             id: updatedUser.id,
@@ -56,8 +77,10 @@ const updateProfile = async (req, res) => {
             role: updatedUser.role,
             phone: updatedUser.phone,
             avatar: updatedUser.avatar,
+            token: generateToken(updatedUser.id) // Retornar nuevo token o el mismo para persistencia
         });
     } catch (error) {
+        console.error('ERROR EN UPDATEPROFILE:', error);
         res.status(500).json({ message: 'Error al actualizar perfil', error: error.message });
     }
 };
@@ -78,16 +101,29 @@ const getUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
     const { id } = req.params;
-    const { username, name, email, phone, avatar, role, password } = req.body;
-
     try {
+        const body = req.body || {};
+        let { username, name, email, phone, avatar, role, password, newPassword } = body;
+        const passToHash = password || newPassword;
+
         if (req.user.role !== 'SUPERADMIN') {
             return res.status(403).json({ message: 'Solo el administrador puede modificar usuarios' });
         }
 
-        const updateData = { username, name, email, phone, avatar, role };
-        if (password) {
-            updateData.password = await hashPassword(password);
+        if (req.file) {
+            avatar = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`;
+        }
+
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        if (phone) updateData.phone = phone;
+        if (avatar) updateData.avatar = avatar;
+        if (role) updateData.role = role;
+
+        if (passToHash) {
+            updateData.password = await hashPassword(passToHash);
         }
 
         const updatedUser = await prisma.user.update({
@@ -98,6 +134,7 @@ const updateUser = async (req, res) => {
 
         res.json(updatedUser);
     } catch (error) {
+        console.error('ERROR EN UPDATEUSER:', error);
         res.status(500).json({ message: 'Error al actualizar usuario', error: error.message });
     }
 };
@@ -172,12 +209,17 @@ const registerUser = async (req, res) => {
     }
 
     const { username, name, password, role, phone, email } = req.body;
+    let avatar = req.body.avatar;
 
     if (!username || !password) {
         return res.status(400).json({ message: 'Usuario y contraseña son obligatorios' });
     }
 
     try {
+        if (req.file) {
+            avatar = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`;
+        }
+
         const existingUser = await prisma.user.findFirst({
             where: { username: { equals: username, mode: 'insensitive' } }
         });
@@ -193,6 +235,7 @@ const registerUser = async (req, res) => {
                 username,
                 name: name || username,
                 email,
+                avatar,
                 password: hashedPassword,
                 role: role || 'GESTOR',
                 phone
@@ -211,11 +254,43 @@ const registerUser = async (req, res) => {
     }
 };
 
+const getActiveManagers = async (req, res) => {
+    try {
+        const daysAgo180 = new Date();
+        daysAgo180.setDate(daysAgo180.getDate() - 180);
+
+        // Buscar usuarios que tengan tickets actualizados en los últimos 180 días
+        const activeUsers = await prisma.user.findMany({
+            where: {
+                role: 'GESTOR',
+                tickets: {
+                    some: {
+                        updatedAt: { gte: daysAgo180 }
+                    }
+                }
+            },
+            select: {
+                id: true,
+                name: true,
+                username: true,
+                avatar: true,
+                role: true
+            },
+            take: 5 // Limitar a los 5 más recientes para el Home
+        });
+
+        res.json(activeUsers);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener gestores activos', error: error.message });
+    }
+};
+
 module.exports = {
     login,
     updateProfile,
     getUsers,
     updateUser,
+    getActiveManagers,
     seedUsers,
     getSettings,
     updateSettings,

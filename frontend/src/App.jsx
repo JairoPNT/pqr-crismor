@@ -9,6 +9,7 @@ function App() {
   const [view, setView] = useState('welcome');
   const [user, setUser] = useState(null);
   const [logoUrl, setLogoUrl] = useState(null);
+  const [activeManagers, setActiveManagers] = useState([]);
   const [lastActivity, setLastActivity] = useState(Date.now());
 
   // Recuperar sesión al cargar
@@ -35,14 +36,25 @@ function App() {
         console.error('Error fetching settings:', error);
       }
     };
+    const fetchActiveManagers = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/auth/active-managers`);
+        const data = await response.json();
+        setActiveManagers(data);
+      } catch (err) {
+        console.error('Error fetching active managers:', err);
+      }
+    };
+
     fetchSettings();
+    fetchActiveManagers();
   }, []);
 
   // Lógica de inactividad (10 minutos)
   useEffect(() => {
     if (!user) return;
 
-    const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutos
+    const INACTIVITY_LIMIT = 24 * 60 * 60 * 1000; // 24 horas
 
     const handleUserActivity = () => {
       setLastActivity(Date.now());
@@ -80,7 +92,7 @@ function App() {
   const renderView = () => {
     switch (view) {
       case 'welcome':
-        return <WelcomePage onNavigate={setView} logo={logoUrl} />;
+        return <WelcomePage onNavigate={setView} logo={logoUrl} activeManagers={activeManagers} />;
       case 'login':
         return (
           <LoginPage
@@ -103,10 +115,10 @@ function App() {
             initialLogo={logoUrl}
           />
         ) : (
-          <WelcomePage onNavigate={setView} logo={logoUrl} />
+          <WelcomePage onNavigate={setView} logo={logoUrl} activeManagers={activeManagers} />
         );
       default:
-        return <WelcomePage onNavigate={setView} logo={logoUrl} />;
+        return <WelcomePage onNavigate={setView} logo={logoUrl} activeManagers={activeManagers} />;
     }
   };
 
