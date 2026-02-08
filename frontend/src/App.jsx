@@ -58,13 +58,16 @@ function App() {
   // Actualizar Favicon dinámicamente
   useEffect(() => {
     if (faviconUrl) {
+      // Agregar cache buster para forzar al navegador a refrescar el icono
+      const busterUrl = `${faviconUrl}${faviconUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
+
       const link = document.querySelector("link[rel~='icon']");
       if (link) {
-        link.href = faviconUrl;
+        link.href = busterUrl;
       } else {
         const newLink = document.createElement('link');
         newLink.rel = 'icon';
-        newLink.href = faviconUrl;
+        newLink.href = busterUrl;
         document.head.appendChild(newLink);
       }
     }

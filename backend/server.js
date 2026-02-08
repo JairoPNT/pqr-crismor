@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (Easypanel/Nginx)
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 

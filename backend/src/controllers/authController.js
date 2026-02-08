@@ -183,14 +183,22 @@ const updateSettings = async (req, res) => {
 
         // Process files if uploaded via upload.fields
         if (req.files) {
+            const getFullUrl = (filePath) => {
+                const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+                const host = req.get('host');
+                // Ensure https for production/easypanel
+                const finalProtocol = (host.includes('localhost') || host.includes('127.0.0.1')) ? protocol : 'https';
+                return `${finalProtocol}://${host}/${filePath.replace(/\\/g, '/')}`;
+            };
+
             if (req.files['logo'] && req.files['logo'][0]) {
-                logoUrl = `${req.protocol}://${req.get('host')}/${req.files['logo'][0].path.replace(/\\/g, '/')}`;
+                logoUrl = getFullUrl(req.files['logo'][0].path);
             }
             if (req.files['favicon'] && req.files['favicon'][0]) {
-                faviconUrl = `${req.protocol}://${req.get('host')}/${req.files['favicon'][0].path.replace(/\\/g, '/')}`;
+                faviconUrl = getFullUrl(req.files['favicon'][0].path);
             }
             if (req.files['horizontalLogo'] && req.files['horizontalLogo'][0]) {
-                horizontalLogoUrl = `${req.protocol}://${req.get('host')}/${req.files['horizontalLogo'][0].path.replace(/\\/g, '/')}`;
+                horizontalLogoUrl = getFullUrl(req.files['horizontalLogo'][0].path);
             }
         }
 
