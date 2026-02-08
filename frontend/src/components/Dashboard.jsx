@@ -18,6 +18,19 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
         if (user.role === 'SUPERADMIN') fetchUsers();
     }, [user]);
 
+    // Mobile Responsive Logic
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 1024);
+            if (window.innerWidth >= 1024) setSidebarOpen(false);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const fetchTickets = async () => {
         try {
             const response = await fetch(`${API_URL}/api/tickets`, {
@@ -60,60 +73,113 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
     };
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
-            {/* Sidebar */}
-            <motion.div
-                initial={{ x: -280 }}
-                animate={{ x: 0 }}
-                style={{ width: '280px', background: 'var(--primary-earth)', color: 'white', padding: '2rem', display: 'flex', flexDirection: 'column' }}
-            >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2.5rem' }}>
-                    <img
-                        src={logo || logoSkinHealth}
-                        alt="Logo"
-                        style={{ width: '120px', marginBottom: '1.5rem', filter: 'brightness(0) invert(1)' }}
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        {user.avatar ? (
-                            <img src={user.avatar} alt="Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} />
-                        ) : (
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>👤</div>
-                        )}
-                        <h2 style={{ color: 'white', margin: 0, fontSize: '1.2rem' }}>PQR-Crismor</h2>
+        <div style={{ display: 'flex', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+            {/* Mobile Actions Overlay */}
+            {isMobile && !sidebarOpen && (
+                <div style={{ position: 'fixed', top: '1rem', left: '1rem', zIndex: 100, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        style={{ background: 'var(--primary-earth)', color: 'white', border: 'none', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.2)', fontSize: '1.5rem' }}
+                    >
+                        ☰
+                    </button>
+                    {/* Mobile Logo for context when sidebar is closed */}
+                    <div style={{ background: 'white', padding: '0.3rem 0.8rem', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <img src={logo || logoSkinHealth} alt="Logo" style={{ height: '25px', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
                     </div>
                 </div>
+            )}
 
-                <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                    <p style={{ opacity: 0.8, fontSize: '0.85rem' }}>Bienvenido,</p>
-                    <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{user.name || user.username}</p>
-                    <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '10px', textTransform: 'uppercase' }}>{user.role}</span>
-                </div>
+            {/* Sidebar */}
+            <AnimatePresence>
+                {(!isMobile || sidebarOpen) && (
+                    <>
+                        {isMobile && (
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                onClick={() => setSidebarOpen(false)}
+                                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 }}
+                            />
+                        )}
+                        <motion.div
+                            initial={{ x: -280 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: -280 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            style={{
+                                width: '280px',
+                                background: 'var(--primary-earth)',
+                                color: 'white',
+                                padding: '2rem',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                position: isMobile ? 'fixed' : 'relative',
+                                top: 0, bottom: 0, left: 0,
+                                zIndex: 100,
+                                height: '100vh',
+                                boxShadow: isMobile ? '4px 0 20px rgba(0,0,0,0.2)' : 'none'
+                            }}
+                        >
+                            {/* Close button for mobile */}
+                            {isMobile && (
+                                <button
+                                    onClick={() => setSidebarOpen(false)}
+                                    style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}
+                                >
+                                    ✕
+                                </button>
+                            )}
 
-                <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
-                    <TabButton active={activeTab === 'new'} onClick={() => setActiveTab('new')} label="🎫 Nuevo PQR" />
-                    <TabButton active={activeTab === 'follow'} onClick={() => setActiveTab('follow')} label="📋 Gestión Casos" />
-                    <TabButton active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} label="📊 Informes" />
-                    <TabButton active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} label="📈 Estadísticas" />
-                    {user.role === 'SUPERADMIN' && (
-                        <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} label="👥 Usuarios" />
-                    )}
-                </nav>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2.5rem' }}>
+                                <img
+                                    src={logo || logoSkinHealth}
+                                    alt="Logo"
+                                    style={{ width: '120px', marginBottom: '1.5rem', filter: 'brightness(0) invert(1)' }}
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    {user.avatar ? (
+                                        <img src={user.avatar} alt="Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} />
+                                    ) : (
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>👤</div>
+                                    )}
+                                    <h2 style={{ color: 'white', margin: 0, fontSize: '1.2rem' }}>PQR-Crismor</h2>
+                                </div>
+                            </div>
 
-                <div style={{ paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} label="👤 Mi Perfil" />
-                    <button
-                        onClick={onLogout}
-                        className="btn-outline"
-                        style={{ border: '1px solid rgba(255,255,255,0.3)', color: 'white', marginTop: '0.3rem', padding: '0.6rem' }}
-                    >
-                        Cerrar Sesión
-                    </button>
-                </div>
-            </motion.div>
+                            <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                                <p style={{ opacity: 0.8, fontSize: '0.85rem' }}>Bienvenido,</p>
+                                <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{user.name || user.username}</p>
+                                <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '10px', textTransform: 'uppercase' }}>{user.role}</span>
+                            </div>
+
+                            <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto' }}>
+                                <TabButton active={activeTab === 'new'} onClick={() => { setActiveTab('new'); if (isMobile) setSidebarOpen(false); }} label="🎫 Nuevo PQR" />
+                                <TabButton active={activeTab === 'follow'} onClick={() => { setActiveTab('follow'); if (isMobile) setSidebarOpen(false); }} label="📋 Gestión Casos" />
+                                <TabButton active={activeTab === 'reports'} onClick={() => { setActiveTab('reports'); if (isMobile) setSidebarOpen(false); }} label="📊 Informes" />
+                                <TabButton active={activeTab === 'stats'} onClick={() => { setActiveTab('stats'); if (isMobile) setSidebarOpen(false); }} label="📈 Estadísticas" />
+                                {user.role === 'SUPERADMIN' && (
+                                    <TabButton active={activeTab === 'users'} onClick={() => { setActiveTab('users'); if (isMobile) setSidebarOpen(false); }} label="👥 Usuarios" />
+                                )}
+                            </nav>
+
+                            <div style={{ paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <TabButton active={activeTab === 'profile'} onClick={() => { setActiveTab('profile'); if (isMobile) setSidebarOpen(false); }} label="👤 Mi Perfil" />
+                                <button
+                                    onClick={onLogout}
+                                    className="btn-outline"
+                                    style={{ border: '1px solid rgba(255,255,255,0.3)', color: 'white', marginTop: '0.3rem', padding: '0.6rem' }}
+                                >
+                                    Cerrar Sesión
+                                </button>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Main Content */}
-            <div style={{ flex: 1, padding: '3rem', overflowY: 'auto', background: '#F4F7F4' }}>
+            <div style={{ flex: 1, padding: isMobile ? '5rem 1rem 2rem 1rem' : '3rem', overflowY: 'auto', background: '#F4F7F4', width: '100%' }}>
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
@@ -122,12 +188,12 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
                         animate="visible"
                         exit="exit"
                     >
-                        {activeTab === 'new' && <NewTicketForm user={user} onSuccess={() => { fetchTickets(); setActiveTab('follow'); }} />}
-                        {activeTab === 'follow' && <TicketList tickets={tickets} user={user} users={users} onUpdate={fetchTickets} />}
-                        {activeTab === 'stats' && <StatsView stats={stats} users={users} user={user} onRefresh={fetchStats} />}
-                        {activeTab === 'reports' && <ReportsView tickets={tickets} user={user} users={users} />}
-                        {activeTab === 'profile' && <ProfileView user={user} onUpdate={handleProfileUpdate} />}
-                        {activeTab === 'users' && user.role === 'SUPERADMIN' && <UserManagement user={user} users={users} onUpdate={fetchUsers} />}
+                        {activeTab === 'new' && <NewTicketForm user={user} isMobile={isMobile} onSuccess={() => { fetchTickets(); setActiveTab('follow'); }} />}
+                        {activeTab === 'follow' && <TicketList tickets={tickets} user={user} users={users} isMobile={isMobile} onUpdate={fetchTickets} />}
+                        {activeTab === 'stats' && <StatsView stats={stats} users={users} user={user} isMobile={isMobile} onRefresh={fetchStats} />}
+                        {activeTab === 'reports' && <ReportsView tickets={tickets} user={user} users={users} isMobile={isMobile} />}
+                        {activeTab === 'profile' && <ProfileView user={user} isMobile={isMobile} onUpdate={handleProfileUpdate} />}
+                        {activeTab === 'users' && user.role === 'SUPERADMIN' && <UserManagement user={user} users={users} isMobile={isMobile} onUpdate={fetchUsers} />}
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -154,7 +220,8 @@ const TabButton = ({ active, onClick, label }) => (
     </motion.button>
 );
 
-const NewTicketForm = ({ user, onSuccess }) => {
+
+const NewTicketForm = ({ user, onSuccess, isMobile }) => {
     const [formData, setFormData] = useState({
         patientName: '', contactMethod: '', city: '', phone: '', email: '', description: ''
     });
@@ -183,7 +250,7 @@ const NewTicketForm = ({ user, onSuccess }) => {
         <div className="glass-card" style={{ maxWidth: '800px' }}>
             <h3 style={{ marginBottom: '2rem' }}>Registrar Nuevo Caso</h3>
             <form onSubmit={handleSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '1rem' : '1.5rem' }}>
                     <div className="form-group">
                         <label className="form-label">Nombre del Paciente</label>
                         <input className="input-field" value={formData.patientName} onChange={e => setFormData({ ...formData, patientName: e.target.value })} required />
@@ -227,7 +294,7 @@ const NewTicketForm = ({ user, onSuccess }) => {
     );
 };
 
-const TicketList = ({ tickets, user, users, onUpdate }) => {
+const TicketList = ({ tickets, user, users, onUpdate, isMobile }) => {
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [reassigning, setReassigning] = useState(null);
 
@@ -258,7 +325,14 @@ const TicketList = ({ tickets, user, users, onUpdate }) => {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: idx * 0.05 }}
                             className="glass-card"
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2rem' }}
+                            style={{
+                                display: 'flex',
+                                flexDirection: isMobile ? 'column' : 'row',
+                                justifyContent: 'space-between',
+                                alignItems: isMobile ? 'flex-start' : 'center',
+                                gap: isMobile ? '1rem' : '0',
+                                padding: '1.2rem 2rem'
+                            }}
                         >
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.3rem' }}>
@@ -269,7 +343,7 @@ const TicketList = ({ tickets, user, users, onUpdate }) => {
                                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t.city} • {new Date(t.createdAt).toLocaleDateString()}</p>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.8rem' : '1.5rem', width: isMobile ? '100%' : 'auto' }}>
                                 <span className={`status-badge status-${t.status.toLowerCase()}`}>{t.status}</span>
 
                                 {user.role === 'SUPERADMIN' && (
@@ -299,9 +373,9 @@ const TicketList = ({ tickets, user, users, onUpdate }) => {
                                 )}
 
                                 {isOwner ? (
-                                    <button className="btn-primary" style={{ padding: '0.5rem 1.2rem' }} onClick={() => setSelectedTicket(t)}>Gestionar</button>
+                                    <button className="btn-primary" style={{ padding: '0.5rem 1.2rem', width: isMobile ? '100%' : 'auto' }} onClick={() => setSelectedTicket(t)}>Gestionar</button>
                                 ) : (
-                                    <button className="btn-outline" style={{ padding: '0.5rem 1.2rem', opacity: 0.5, cursor: 'not-allowed' }} disabled>Lectura</button>
+                                    <button className="btn-outline" style={{ padding: '0.5rem 1.2rem', opacity: 0.5, cursor: 'not-allowed', width: isMobile ? '100%' : 'auto' }} disabled>Lectura</button>
                                 )}
                             </div>
                         </motion.div>
@@ -357,7 +431,7 @@ const FollowUpForm = ({ ticket, user, onDone }) => {
 
     return (
         <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 <div className="form-group">
                     <label className="form-label">Diagnóstico</label>
                     <input className="input-field" value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} required />
@@ -386,7 +460,7 @@ const FollowUpForm = ({ ticket, user, onDone }) => {
     );
 };
 
-const ReportsView = ({ tickets, user, users }) => {
+const ReportsView = ({ tickets, user, users, isMobile }) => {
     const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedGestor, setSelectedGestor] = useState('all');
@@ -467,7 +541,7 @@ const ReportsView = ({ tickets, user, users }) => {
                 </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '2rem' }}>
                 <div style={{ padding: '2rem', background: 'white', borderRadius: '15px', border: '1px solid rgba(41, 80, 38, 0.1)' }}>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Casos en el periodo</p>
                     <p style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{filteredTickets.length}</p>
@@ -483,7 +557,7 @@ const ReportsView = ({ tickets, user, users }) => {
     );
 };
 
-const UserManagement = ({ user, users, onUpdate }) => {
+const UserManagement = ({ user, users, onUpdate, isMobile }) => {
     const [editingUser, setEditingUser] = useState(null);
     const [isCreating, setIsCreating] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -513,7 +587,7 @@ const UserManagement = ({ user, users, onUpdate }) => {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                 {users.map(u => (
-                    <motion.div key={u.id} className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1.5rem' }}>
+                    <motion.div key={u.id} className="glass-card" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: '1.5rem', padding: '1.5rem' }}>
                         {u.avatar ? (
                             <img src={u.avatar} alt="Avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
                         ) : (
@@ -634,7 +708,7 @@ const NewUserForm = ({ user, onDone }) => {
     );
 };
 
-const StatsView = ({ stats, users, user, onRefresh }) => {
+const StatsView = ({ stats, users, user, onRefresh, isMobile }) => {
     const [filters, setFilters] = useState({ city: '', gestorId: '', status: '' });
 
     const handleFilterChange = (key, value) => {
@@ -648,7 +722,7 @@ const StatsView = ({ stats, users, user, onRefresh }) => {
         <div>
             <h3 style={{ marginBottom: '2rem' }}>Análisis de Gestión Estratégica</h3>
 
-            <div className="glass-card" style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', padding: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div className="glass-card" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.5rem', marginBottom: '2rem', padding: '1.5rem', alignItems: isMobile ? 'stretch' : 'flex-end', flexWrap: 'wrap' }}>
                 <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '150px' }}>
                     <label className="form-label" style={{ fontSize: '0.8rem' }}>Ciudad</label>
                     <select className="input-field" value={filters.city} onChange={e => handleFilterChange('city', e.target.value)}>
@@ -676,7 +750,7 @@ const StatsView = ({ stats, users, user, onRefresh }) => {
                 <button className="btn-outline" style={{ padding: '0.8rem' }} onClick={() => handleFilterChange('reset', '')}>🔄</button>
             </div>
 
-            <div className="stats-grid">
+            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                 <StatCard label="Total PQRs" value={stats.totalTickets} color="var(--primary-earth)" />
                 <StatCard label="Finalizados" value={stats.resolvedTickets} color="var(--success)" />
                 <StatCard label="Ingresos" value={`$${stats.totalRevenue.toLocaleString()}`} color="#3a6b36" />
@@ -707,7 +781,7 @@ const StatCard = ({ label, value, color }) => (
         <p style={{ fontSize: '2.2rem', fontWeight: 'bold', color: color }}>{value}</p>
     </motion.div>
 );
-const ProfileView = ({ user, onUpdate }) => {
+const ProfileView = ({ user, onUpdate, isMobile }) => {
     const [formData, setFormData] = useState({
         username: user.username,
         name: user.name || '',
@@ -740,7 +814,7 @@ const ProfileView = ({ user, onUpdate }) => {
     };
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '2rem' }}>
             <div className="glass-card">
                 <h3 style={{ marginBottom: '2rem' }}>Configuración de Perfil</h3>
                 <form onSubmit={handleSubmit}>
