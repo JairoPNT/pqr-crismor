@@ -17,34 +17,8 @@ app.use((req, res, next) => {
 const authRoutes = require('./src/routes/authRoutes');
 const ticketRoutes = require('./src/routes/ticketRoutes');
 
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://criisapp-frontend.tcnjej.easypanel.host',
-    'https://criisapp.nariionline.cloud',
-    'https://pqr-crismor-pqr-frontend.tcnjej.easypanel.host',
-    'https://pqr.nariionline.cloud'
-];
-
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-
-        // Check if the origin matches any of our allowed patterns
-        const isAllowed = allowedOrigins.includes(origin) ||
-            origin.includes('nariionline.cloud') ||
-            origin.includes('criisapp') ||
-            origin.includes('pqr-frontend') ||
-            origin.includes('localhost');
-
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            console.log('CORS Blocked for origin:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: true, // Allow all origins temporarily for debugging
     credentials: true
 }));
 app.use(express.json());
