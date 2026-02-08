@@ -1,11 +1,23 @@
-const express = require('express');
-const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
+
+// Security Middleware
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" } // Allow loading images from our own server
+}));
+
+// Rate Limiting: General
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo más tarde.'
+});
+app.use('/api/', generalLimiter);
 
 // Logging Middleware simple
 app.use((req, res, next) => {
@@ -17,8 +29,26 @@ app.use((req, res, next) => {
 const authRoutes = require('./src/routes/authRoutes');
 const ticketRoutes = require('./src/routes/ticketRoutes');
 
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://criisapp-frontend.tcnjej.easypanel.host',
+    'https://criisapp.nariionline.cloud'
+];
+
 app.use(cors({
-    origin: true, // Allow all origins temporarily for debugging
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        const isAllowed = allowedOrigins.includes(origin) ||
+            origin.includes('criisapp') ||
+            origin.includes('localhost');
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.log('CORS Blocked for origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use(express.json());
