@@ -156,9 +156,12 @@ const LoginPage = ({ onLogin, onBack, logo }) => {
                     </form>
 
                     {/* Footer Tarjeta */}
-                    <div className="mt-8 text-center">
+                    <div className="mt-8 text-center space-y-1">
                         <p className="text-[10px] text-primary/40 dark:text-gray-500">
-                            © 2024 PQRS CriisApp • Acceso Restringido
+                            © 2026 PQRS CriisApp • Acceso Restringido
+                        </p>
+                        <p className="text-[9px] text-primary/30 dark:text-gray-600 font-medium">
+                            Desarrollado por <a href="https://maeva.studio" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Maeva Studio</a>
                         </p>
                     </div>
 

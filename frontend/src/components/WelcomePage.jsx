@@ -116,7 +116,12 @@ const WelcomePage = ({ onNavigate, logo, horizontalLogo, activeManagers = [] }) 
             {/* Footer */}
             <footer className="w-full px-6 py-6 border-t border-primary/5 dark:border-white/5 bg-white/30 dark:bg-black/20 backdrop-blur-sm mt-auto relative z-10 transition-colors">
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    <p>© 2024 CriisApp <span className="mx-2 text-accent">•</span> Excelance Dermatológica</p>
+                    <div className="text-center md:text-left">
+                        <p>© 2026 CriisApp <span className="mx-2 text-accent">•</span> Excelance Dermatológica</p>
+                        <p className="text-[10px] text-gray-400/80 dark:text-gray-500/80 mt-1">
+                            Desarrollado por <a href="https://maeva.studio" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors font-bold">Maeva Studio</a>
+                        </p>
+                    </div>
 
                     <div className="flex items-center gap-1.5 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-full border border-white/50 dark:border-white/10 shadow-sm overflow-hidden">
                         <div className="flex -space-x-2 mr-2">
