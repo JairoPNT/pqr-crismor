@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import logoSkinHealth from '../assets/logo_skinhealth.png';
 
-const LoginPage = ({ onLogin, onBack }) => {
+const LoginPage = ({ onLogin, onBack, logo }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -47,8 +47,8 @@ const LoginPage = ({ onLogin, onBack }) => {
                 </button>
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <img
-                        src={logoSkinHealth}
-                        alt="SkinHealth Logo"
+                        src={logo || logoSkinHealth}
+                        alt="Logo"
                         style={{ width: '120px', marginBottom: '1rem' }}
                         onError={(e) => { e.target.style.display = 'none'; }}
                     />

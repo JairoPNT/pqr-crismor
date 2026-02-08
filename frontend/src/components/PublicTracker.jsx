@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoSkinHealth from '../assets/logo_skinhealth.png';
 
-const PublicTracker = ({ onBack }) => {
+const PublicTracker = ({ onBack, logo }) => {
     const [ticketId, setTicketId] = useState('');
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -34,8 +34,8 @@ const PublicTracker = ({ onBack }) => {
         <div className="container">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '3rem' }}>
                 <img
-                    src={logoSkinHealth}
-                    alt="SkinHealth Logo"
+                    src={logo || logoSkinHealth}
+                    alt="Logo"
                     style={{ width: '180px', marginBottom: '2rem' }}
                     onError={(e) => { e.target.style.display = 'none'; }}
                 />

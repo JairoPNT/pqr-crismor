@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import logoSkinHealth from '../assets/logo_skinhealth.png';
 
-const Dashboard = ({ user: initialUser, onLogout }) => {
+const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
     const [user, setUser] = useState(initialUser);
+    const [logo, setLogo] = useState(initialLogo);
     const [activeTab, setActiveTab] = useState('new');
     const [tickets, setTickets] = useState([]);
     const [stats, setStats] = useState(null);
@@ -67,8 +68,8 @@ const Dashboard = ({ user: initialUser, onLogout }) => {
             >
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2.5rem' }}>
                     <img
-                        src={logoSkinHealth}
-                        alt="SkinHealth Logo"
+                        src={logo || logoSkinHealth}
+                        alt="Logo"
                         style={{ width: '120px', marginBottom: '1.5rem', filter: 'brightness(0) invert(1)' }}
                         onError={(e) => { e.target.style.display = 'none'; }}
                     />
@@ -84,7 +85,7 @@ const Dashboard = ({ user: initialUser, onLogout }) => {
 
                 <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
                     <p style={{ opacity: 0.8, fontSize: '0.85rem' }}>Bienvenido,</p>
-                    <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{user.username}</p>
+                    <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{user.name || user.username}</p>
                     <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '10px', textTransform: 'uppercase' }}>{user.role}</span>
                 </div>
 
@@ -277,13 +278,19 @@ const TicketList = ({ tickets, user, users, onUpdate }) => {
                                         </button>
                                         <AnimatePresence>
                                             {reassigning === t.id && (
-                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ position: 'absolute', top: '110%', right: 0, background: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', borderRadius: '10px', zIndex: 10, width: '180px', padding: '0.5rem' }}>
-                                                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', padding: '0 0.5rem' }}>Asignar a:</p>
-                                                    {users.map(u => (
-                                                        <button key={u.id} style={{ width: '100%', textAlign: 'left', padding: '0.5rem', borderRadius: '5px', background: t.assignedToId === u.id ? 'var(--pale-green)' : 'none', fontSize: '0.85rem' }} onClick={() => handleReassign(t.id, u.id)}>
-                                                            {u.username}
-                                                        </button>
-                                                    ))}
+                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ position: 'absolute', top: '110%', right: 0, background: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', borderRadius: '10px', zIndex: 10, width: '220px', padding: '0.8rem' }}>
+                                                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Asignar a:</label>
+                                                    <select
+                                                        className="input-field"
+                                                        style={{ fontSize: '0.85rem', padding: '0.4rem' }}
+                                                        value={t.assignedToId}
+                                                        onChange={(e) => handleReassign(t.id, e.target.value)}
+                                                    >
+                                                        <option value="">Seleccionar gestor...</option>
+                                                        {users.map(u => (
+                                                            <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
+                                                        ))}
+                                                    </select>
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -366,7 +373,7 @@ const FollowUpForm = ({ ticket, user, onDone }) => {
             <div className="form-group">
                 <label className="form-label">Cambiar Estado</label>
                 <select className="input-field" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                    <option value="INICIADO">Iniciado</option>
+                    <option value="INICIAL">Inicial</option>
                     <option value="EN_SEGUIMIENTO">En Seguimiento</option>
                     <option value="FINALIZADO">Finalizado</option>
                 </select>
@@ -406,7 +413,7 @@ const ReportsView = ({ tickets, user, users }) => {
 
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
-        doc.text(`Generado por: ${user.username}`, 20, 50);
+        doc.text(`Generado por: ${user.name || user.username}`, 20, 50);
         doc.text(`Fecha del Reporte: ${now}`, 20, 60);
         doc.text(`Periodo: desde ${startDate} hasta ${endDate}`, 20, 70);
         if (selectedGestor !== 'all') {
@@ -477,6 +484,7 @@ const ReportsView = ({ tickets, user, users }) => {
 
 const UserManagement = ({ user, users, onUpdate }) => {
     const [editingUser, setEditingUser] = useState(null);
+    const [isCreating, setIsCreating] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleUpdateUser = async (e) => {
@@ -498,7 +506,10 @@ const UserManagement = ({ user, users, onUpdate }) => {
 
     return (
         <div>
-            <h3 style={{ marginBottom: '2rem' }}>Administración de Usuarios y Gestores</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h3 style={{ margin: 0 }}>Administración de Usuarios y Gestores</h3>
+                <button className="btn-primary" onClick={() => setIsCreating(true)}>+ Nuevo Gestor</button>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                 {users.map(u => (
                     <motion.div key={u.id} className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1.5rem' }}>
@@ -508,7 +519,8 @@ const UserManagement = ({ user, users, onUpdate }) => {
                             <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--pale-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>👤</div>
                         )}
                         <div style={{ flex: 1 }}>
-                            <p style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{u.username}</p>
+                            <p style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{u.name || u.username}</p>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>@{u.username}</p>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{u.email || 'Sin correo'}</p>
                             <span style={{ fontSize: '0.75rem', background: 'var(--pale-green)', padding: '2px 8px', borderRadius: '10px' }}>{u.role}</span>
                         </div>
@@ -527,7 +539,11 @@ const UserManagement = ({ user, users, onUpdate }) => {
                             </div>
                             <form onSubmit={handleUpdateUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div className="form-group">
-                                    <label className="form-label">Nombre</label>
+                                    <label className="form-label">Nombre Completo</label>
+                                    <input className="input-field" value={editingUser.name || ''} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Usuario / Correo / ID</label>
                                     <input className="input-field" value={editingUser.username} onChange={e => setEditingUser({ ...editingUser, username: e.target.value })} />
                                 </div>
                                 <div className="form-group">
@@ -547,7 +563,73 @@ const UserManagement = ({ user, users, onUpdate }) => {
                     </div>
                 )}
             </AnimatePresence>
+
+            <AnimatePresence>
+                {isCreating && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="glass-card" style={{ background: 'white', width: '90%', maxWidth: '500px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h4>Registrar Nuevo Gestor</h4>
+                                <button onClick={() => setIsCreating(false)} style={{ background: 'none', fontSize: '1.2rem' }}>✕</button>
+                            </div>
+                            <NewUserForm user={user} onDone={() => { setIsCreating(false); onUpdate(); }} />
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
+    );
+};
+
+const NewUserForm = ({ user, onDone }) => {
+    const [formData, setFormData] = useState({ username: '', name: '', email: '', password: '', role: 'GESTOR', phone: '' });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const response = await fetch('http://127.0.0.1:3000/api/auth/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+                body: JSON.stringify(formData)
+            });
+            if (response.ok) onDone();
+            else {
+                const data = await response.json();
+                alert(data.message || 'Error al crear usuario');
+            }
+        } catch (err) { alert('Error de conexión'); }
+        finally { setLoading(false); }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="form-group">
+                <label className="form-label">Nombre Completo</label>
+                <input className="input-field" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+            </div>
+            <div className="form-group">
+                <label className="form-label">Usuario (Correo, Tel, etc.)</label>
+                <input className="input-field" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} required />
+            </div>
+            <div className="form-group">
+                <label className="form-label">Contraseña</label>
+                <input className="input-field" type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required />
+            </div>
+            <div className="form-group">
+                <label className="form-label">Correo</label>
+                <input className="input-field" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+            </div>
+            <div className="form-group">
+                <label className="form-label">Rol</label>
+                <select className="input-field" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                    <option value="GESTOR">Gestor</option>
+                    <option value="SUPERADMIN">Super Admin</option>
+                </select>
+            </div>
+            <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Registrando...' : 'Registrar Gestor'}</button>
+        </form>
     );
 };
 
@@ -624,5 +706,171 @@ const StatCard = ({ label, value, color }) => (
         <p style={{ fontSize: '2.2rem', fontWeight: 'bold', color: color }}>{value}</p>
     </motion.div>
 );
+const ProfileView = ({ user, onUpdate }) => {
+    const [formData, setFormData] = useState({
+        username: user.username,
+        name: user.name || '',
+        email: user.email || '',
+        currentPassword: '',
+        newPassword: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState(null);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage(null);
+        try {
+            const response = await fetch('http://127.0.0.1:3000/api/auth/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+                body: JSON.stringify(formData)
+            });
+            const data = await response.json();
+            if (response.ok) {
+                onUpdate(data);
+                setMessage({ type: 'success', text: 'Perfil actualizado con éxito' });
+            } else {
+                setMessage({ type: 'error', text: data.message });
+            }
+        } catch (err) { setMessage({ type: 'error', text: 'Error al actualizar' }); }
+        finally { setLoading(false); }
+    };
+
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div className="glass-card">
+                <h3 style={{ marginBottom: '2rem' }}>Configuración de Perfil</h3>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label className="form-label">Nombre Completo</label>
+                        <input className="input-field" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Nombre de Usuario / Login</label>
+                        <input className="input-field" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Correo Electrónico</label>
+                        <input className="input-field" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                    </div>
+                    <hr style={{ margin: '2rem 0', opacity: 0.1 }} />
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Seguridad (Opcional)</p>
+                    <div className="form-group">
+                        <label className="form-label">Contraseña Actual</label>
+                        <input className="input-field" type="password" value={formData.currentPassword} onChange={e => setFormData({ ...formData, currentPassword: e.target.value })} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Nueva Contraseña</label>
+                        <input className="input-field" type="password" value={formData.newPassword} onChange={e => setFormData({ ...formData, newPassword: e.target.value })} />
+                    </div>
+                    {message && <p style={{ color: message.type === 'success' ? 'var(--success)' : 'var(--error)', marginBottom: '1rem' }}>{message.text}</p>}
+                    <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Actualizando...' : 'Guardar Cambios'}</button>
+                </form>
+            </div>
+
+            {user.role === 'SUPERADMIN' && <BrandManagement user={user} />}
+        </div>
+    );
+};
+
+const BrandManagement = ({ user }) => {
+    const [uploadMode, setUploadMode] = useState('url'); // 'url' or 'file'
+    const [logoUrl, setLogoUrl] = useState('');
+    const [logoFile, setLogoFile] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleUpdateLogo = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const formData = new FormData();
+        if (uploadMode === 'file' && logoFile) {
+            formData.append('logo', logoFile);
+        } else {
+            formData.append('logoUrl', logoUrl);
+        }
+
+        try {
+            const response = await fetch('http://127.0.0.1:3000/api/auth/settings', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${user.token}` },
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok) {
+                alert('Logo actualizado exitosamente. Reinicia la página para ver los cambios.');
+                if (data.logoUrl) setLogoUrl(data.logoUrl);
+            } else {
+                alert(data.message || 'Error al actualizar logo');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error al actualizar marca');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="glass-card">
+            <h3 style={{ marginBottom: '2rem' }}>🎨 Gestión de Marca</h3>
+
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <button
+                    type="button"
+                    className={uploadMode === 'url' ? 'btn-primary' : 'btn-outline'}
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    onClick={() => setUploadMode('url')}
+                >
+                    Enlace Externo
+                </button>
+                <button
+                    type="button"
+                    className={uploadMode === 'file' ? 'btn-primary' : 'btn-outline'}
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                    onClick={() => setUploadMode('file')}
+                >
+                    Subir Archivo
+                </button>
+            </div>
+
+            <form onSubmit={handleUpdateLogo}>
+                {uploadMode === 'url' ? (
+                    <div className="form-group">
+                        <label className="form-label">URL del Logo</label>
+                        <input
+                            className="input-field"
+                            placeholder="https://ejemplo.com/logo.png"
+                            value={logoUrl}
+                            onChange={e => setLogoUrl(e.target.value)}
+                        />
+                    </div>
+                ) : (
+                    <div className="form-group">
+                        <label className="form-label">Seleccionar Imagen (PNG/JPG)</label>
+                        <input
+                            type="file"
+                            className="input-field"
+                            accept="image/*"
+                            onChange={e => setLogoFile(e.target.files[0])}
+                        />
+                    </div>
+                )}
+                <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%' }}>
+                    {loading ? 'Procesando...' : 'Actualizar Identidad Visual'}
+                </button>
+            </form>
+
+            <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(0,0,0,0.02)', borderRadius: '15px', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Vista previa del logo:</p>
+                <div style={{ background: 'var(--primary-earth)', padding: '1rem', display: 'inline-block', borderRadius: '10px' }}>
+                    <img src={logoUrl || logoSkinHealth} alt="Preview" style={{ maxWidth: '120px', maxHeight: '60px', objectFit: 'contain' }} />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default Dashboard;

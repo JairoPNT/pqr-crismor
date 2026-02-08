@@ -20,6 +20,7 @@ const login = async (req, res) => {
             res.json({
                 id: user.id,
                 username: user.username,
+                name: user.name,
                 email: user.email,
                 role: user.role,
                 phone: user.phone,
@@ -35,9 +36,9 @@ const login = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-    const { username, email, phone, avatar, password } = req.body;
+    const { username, name, email, phone, avatar, password } = req.body;
     try {
-        const updateData = { username, email, phone, avatar };
+        const updateData = { username, name, email, phone, avatar };
         if (password) {
             updateData.password = await hashPassword(password);
         }
@@ -50,6 +51,7 @@ const updateProfile = async (req, res) => {
         res.json({
             id: updatedUser.id,
             username: updatedUser.username,
+            name: updatedUser.name,
             email: updatedUser.email,
             role: updatedUser.role,
             phone: updatedUser.phone,
@@ -66,7 +68,7 @@ const getUsers = async (req, res) => {
             return res.status(403).json({ message: 'Acceso denegado' });
         }
         const users = await prisma.user.findMany({
-            select: { id: true, username: true, role: true, email: true, phone: true, avatar: true }
+            select: { id: true, username: true, name: true, role: true, email: true, phone: true, avatar: true }
         });
         res.json(users);
     } catch (error) {
@@ -76,14 +78,14 @@ const getUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
     const { id } = req.params;
-    const { username, email, phone, avatar, role, password } = req.body;
+    const { username, name, email, phone, avatar, role, password } = req.body;
 
     try {
         if (req.user.role !== 'SUPERADMIN') {
             return res.status(403).json({ message: 'Solo el administrador puede modificar usuarios' });
         }
 
-        const updateData = { username, email, phone, avatar, role };
+        const updateData = { username, name, email, phone, avatar, role };
         if (password) {
             updateData.password = await hashPassword(password);
         }
@@ -91,7 +93,7 @@ const updateUser = async (req, res) => {
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
             data: updateData,
-            select: { id: true, username: true, role: true, email: true, phone: true, avatar: true }
+            select: { id: true, username: true, name: true, role: true, email: true, phone: true, avatar: true }
         });
 
         res.json(updatedUser);
@@ -124,10 +126,98 @@ const seedUsers = async (req, res) => {
     }
 };
 
+const getSettings = async (req, res) => {
+    try {
+        const settings = await prisma.systemSetting.findMany();
+        const settingsMap = settings.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
+        res.json(settingsMap);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener configuración', error: error.message });
+    }
+};
+
+const updateSettings = async (req, res) => {
+    if (req.user.role !== 'SUPERADMIN') {
+        return res.status(403).json({ message: 'No tienes permisos para realizar esta acción' });
+    }
+
+    try {
+        let { logoUrl } = req.body;
+
+        // If a file was uploaded, use its path
+        if (req.file) {
+            // Convert backslashes to forward slashes for the URL
+            logoUrl = `http://127.0.0.1:3000/${req.file.path.replace(/\\/g, '/')}`;
+        }
+
+        if (!logoUrl) {
+            return res.status(400).json({ message: 'Se requiere una URL o un archivo de imagen' });
+        }
+
+        await prisma.systemSetting.upsert({
+            where: { key: 'logoUrl' },
+            update: { value: logoUrl },
+            create: { key: 'logoUrl', value: logoUrl }
+        });
+
+        res.json({ message: 'Configuración actualizada con éxito', logoUrl });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al actualizar configuración', error: error.message });
+    }
+};
+
+const registerUser = async (req, res) => {
+    if (req.user.role !== 'SUPERADMIN') {
+        return res.status(403).json({ message: 'Solo el administrador puede crear nuevos usuarios' });
+    }
+
+    const { username, name, password, role, phone, email } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Usuario y contraseña son obligatorios' });
+    }
+
+    try {
+        const existingUser = await prisma.user.findFirst({
+            where: { username: { equals: username, mode: 'insensitive' } }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ message: 'El nombre de usuario ya está en uso' });
+        }
+
+        const hashedPassword = await hashPassword(password);
+
+        const newUser = await prisma.user.create({
+            data: {
+                username,
+                name: name || username,
+                email,
+                password: hashedPassword,
+                role: role || 'GESTOR',
+                phone
+            }
+        });
+
+        res.status(201).json({
+            id: newUser.id,
+            username: newUser.username,
+            name: newUser.name,
+            role: newUser.role,
+            email: newUser.email
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al registrar usuario', error: error.message });
+    }
+};
+
 module.exports = {
     login,
     updateProfile,
     getUsers,
     updateUser,
     seedUsers,
+    getSettings,
+    updateSettings,
+    registerUser
 };

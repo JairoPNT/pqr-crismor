@@ -28,7 +28,7 @@ const createTicket = async (req, res) => {
                 phone,
                 email,
                 description,
-                status: 'INICIADO',
+                status: 'INICIAL',
                 revenue: 70000,
                 assignedToId: req.user.id, // Assigned to the creator
                 media: {
