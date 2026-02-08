@@ -42,7 +42,7 @@ const LoginPage = ({ onLogin, onBack, logo }) => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-card"
-                style={{ width: '100%', maxWidth: '400px' }}
+                style={{ width: '100%', maxWidth: '400px', border: '5px solid red' }}
             >
                 <button onClick={onBack} style={{ background: 'none', color: 'var(--text-muted)', marginBottom: '1.5rem', padding: 0, fontWeight: 500 }}>
                     ← Volver
