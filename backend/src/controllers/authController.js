@@ -147,7 +147,7 @@ const updateSettings = async (req, res) => {
         // If a file was uploaded, use its path
         if (req.file) {
             // Convert backslashes to forward slashes for the URL
-            logoUrl = `http://127.0.0.1:3000/${req.file.path.replace(/\\/g, '/')}`;
+            logoUrl = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`;
         }
 
         if (!logoUrl) {

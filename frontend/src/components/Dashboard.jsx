@@ -169,7 +169,7 @@ const NewTicketForm = ({ user, onSuccess }) => {
         photos.forEach(photo => data.append('photos', photo));
 
         try {
-            const response = await fetch('http://127.0.0.1:3000/api/tickets', {
+            const response = await fetch(`${API_URL}/api/tickets`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${user.token}` },
                 body: data
@@ -233,7 +233,7 @@ const TicketList = ({ tickets, user, users, onUpdate }) => {
 
     const handleReassign = async (ticketId, userId) => {
         try {
-            const response = await fetch(`http://127.0.0.1:3000/api/tickets/${ticketId}/reassign`, {
+            const response = await fetch(`${API_URL}/api/tickets/${ticketId}/reassign`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
                 body: JSON.stringify({ assignedToId: userId })
@@ -345,7 +345,7 @@ const FollowUpForm = ({ ticket, user, onDone }) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await fetch(`http://127.0.0.1:3000/api/tickets/${ticket.id}/follow-up`, {
+            await fetch(`${API_URL}/api/tickets/${ticket.id}/follow-up`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
                 body: JSON.stringify(form)
