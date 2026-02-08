@@ -11,7 +11,22 @@ const PORT = process.env.PORT || 3000;
 const authRoutes = require('./src/routes/authRoutes');
 const ticketRoutes = require('./src/routes/ticketRoutes');
 
-app.use(cors());
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://pqr-crismor-pqr-frontend.tcnjej.easypanel.host'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
