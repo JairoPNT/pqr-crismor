@@ -430,8 +430,131 @@ const NewTicketForm = ({ user, onSuccess, isMobile }) => {
     );
 };
 
+const CaseDetailView = ({ ticket, onClose }) => {
+    // Organizar seguimientos por fecha descendente
+    const sortedFollowUps = [...(ticket.followUps || [])].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return (
+        <div className="space-y-8 animate-fade-in pb-10">
+            {/* Header / Datos Personales (Estilo CV) */}
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-gray-100 dark:border-white/5 pb-8">
+                <div className="flex items-start gap-5">
+                    <div className="w-20 h-20 rounded-2xl bg-primary/10 dark:bg-white/5 flex items-center justify-center text-primary dark:text-accent shadow-inner border border-primary/5">
+                        <span className="material-symbols-outlined text-4xl">person</span>
+                    </div>
+                    <div className="space-y-1">
+                        <h2 className="text-3xl font-serif font-bold text-primary dark:text-white leading-tight">{ticket.patientName}</h2>
+                        <div className="flex flex-wrap gap-4 text-sm font-medium text-gray-400">
+                            <div className="flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">mail</span>
+                                {ticket.email || 'Sin correo'}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">call</span>
+                                {ticket.phone}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">location_on</span>
+                                {ticket.city}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-2">
+                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest ${ticket.status === 'FINALIZADO' ? 'bg-success/10 text-success' :
+                        ticket.status === 'EN_SEGUIMIENTO' ? 'bg-blue-500/10 text-blue-500' :
+                            'bg-orange-500/10 text-orange-500'
+                        }`}>
+                        {ticket.status}
+                    </span>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                        Caso #{ticket.id.replace(/-/g, '').slice(0, 8)} • {new Date(ticket.createdAt).toLocaleDateString()}
+                    </p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Diagnóstico e Info Inicial (Columna Izquierda) */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="glass-panel p-6 rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/10">
+                        <h3 className="text-sm font-bold text-primary dark:text-accent uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-lg">medical_information</span>
+                            Diagnóstico Inicial
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-light italic">
+                            "{ticket.description}"
+                        </p>
+                    </div>
+
+                    {ticket.media && ticket.media.length > 0 && (
+                        <div className="glass-panel p-6 rounded-2xl border border-gray-100 dark:border-white/5">
+                            <h3 className="text-sm font-bold text-primary dark:text-accent uppercase tracking-widest mb-4">Fotos Iniciales</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                {ticket.media.map((img, i) => (
+                                    <div key={i} className="aspect-square rounded-xl overflow-hidden bg-black/5 cursor-zoom-in hover:scale-[1.02] transition-all" onClick={() => window.open(`${API_URL}/${img.path}`, '_blank')}>
+                                        <img src={`${API_URL}/${img.path}`} alt={`Media ${i}`} className="w-full h-full object-cover" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Línea de Tiempo de Evolución (Columna Derecha / Central) */}
+                <div className="lg:col-span-2 space-y-6">
+                    <h3 className="text-sm font-bold text-primary dark:text-accent uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-lg">timeline</span>
+                        Evolución del Proceso
+                    </h3>
+
+                    <div className="relative border-l-2 border-gray-100 dark:border-white/5 ml-4 pl-8 space-y-10">
+                        {sortedFollowUps.length > 0 ? (
+                            sortedFollowUps.map((fu, idx) => (
+                                <div key={fu.id} className="relative">
+                                    {/* Marcador de línea de tiempo */}
+                                    <div className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-white dark:bg-sidebar border-4 border-accent shadow-sm z-10"></div>
+
+                                    <div className="glass-panel p-6 rounded-2xl border border-gray-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/5 transition-all">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h4 className="font-bold text-primary dark:text-white mb-1">{fu.diagnosis || 'Actualización de Seguimiento'}</h4>
+                                                <p className="text-[10px] text-gray-400 uppercase tracking-tighter">{new Date(fu.createdAt).toLocaleString()}</p>
+                                            </div>
+                                            <span className="text-[10px] bg-primary/5 px-2 py-1 rounded text-primary/60 dark:text-gray-400 font-bold uppercase">{fu.status}</span>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {fu.protocol && (
+                                                <div className="text-sm text-gray-600 dark:text-gray-300">
+                                                    <span className="font-bold text-accent text-xs uppercase block mb-1">Protocolo:</span>
+                                                    {fu.protocol}
+                                                </div>
+                                            )}
+                                            {fu.content && (
+                                                <div className="text-sm text-gray-600 dark:text-gray-300">
+                                                    <span className="font-bold text-accent text-xs uppercase block mb-1">Observaciones:</span>
+                                                    {fu.content}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-10 opacity-30 italic">No hay actualizaciones aún...</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, setShowArchived }) => {
     const [selectedTicket, setSelectedTicket] = useState(null);
+    const [viewingCase, setViewingCase] = useState(null);
     const [reassigning, setReassigning] = useState(null);
     const [openMenu, setOpenMenu] = useState(null);
 
@@ -487,6 +610,21 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
         }
     };
 
+    if (viewingCase) {
+        return (
+            <div className="space-y-6">
+                <button
+                    onClick={() => setViewingCase(null)}
+                    className="flex items-center gap-2 text-primary dark:text-white hover:text-accent transition-all font-bold text-sm mb-4"
+                >
+                    <span className="material-symbols-outlined">arrow_back</span>
+                    Volver al listado
+                </button>
+                <CaseDetailView ticket={viewingCase} />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {user.role === 'SUPERADMIN' && (
@@ -514,14 +652,16 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
-                            className="glass-panel p-5 md:p-6 rounded-2xl border border-gray-100 dark:border-white/5 hover:border-accent/30 transition-all flex flex-col md:flex-row md:items-center gap-6 group"
+                            onClick={() => setViewingCase(t)}
+                            className="glass-panel p-5 md:p-6 rounded-2xl border border-gray-100 dark:border-white/5 hover:border-accent/30 transition-all flex flex-col md:flex-row md:items-center gap-6 group cursor-pointer"
                         >
                             <div className="flex-1 space-y-2">
                                 <div className="flex items-center gap-3">
                                     <span
                                         className="font-montserrat font-bold text-accent cursor-pointer flex items-center gap-1 hover:underline tracking-wider"
                                         title="Click para compartir en WhatsApp"
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.stopPropagation();
                                             const ticketIdClean = t.id.replace(/-/g, '');
                                             const message = `Hola ${t.patientName}, su número de caso es el ${ticketIdClean}. Puede consultar el estado en: criisapp.nariionline.cloud`;
                                             window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
@@ -577,14 +717,14 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                                                     className="absolute bottom-full right-0 mb-2 w-48 glass-panel p-2 rounded-xl border border-white/10 shadow-2xl z-20 flex flex-col gap-1"
                                                 >
                                                     <button
-                                                        onClick={() => { setReassigning(t.id); setOpenMenu(null); }}
+                                                        onClick={(e) => { e.stopPropagation(); setReassigning(t.id); setOpenMenu(null); }}
                                                         className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-accent/10 hover:text-accent transition-all flex items-center gap-2"
                                                     >
                                                         <span className="material-symbols-outlined text-sm">person_pin_circle</span>
                                                         Reasignar
                                                     </button>
                                                     <button
-                                                        onClick={() => handleArchiveTicket(t.id, !t.isArchived)}
+                                                        onClick={(e) => { e.stopPropagation(); handleArchiveTicket(t.id, !t.isArchived); }}
                                                         className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-accent/10 hover:text-accent transition-all flex items-center gap-2"
                                                     >
                                                         <span className="material-symbols-outlined text-sm">{t.isArchived ? 'unarchive' : 'archive'}</span>
@@ -592,7 +732,7 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                                                     </button>
                                                     <div className="h-px bg-white/5 my-1" />
                                                     <button
-                                                        onClick={() => { handleDeleteTicket(t.id); setOpenMenu(null); }}
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteTicket(t.id); setOpenMenu(null); }}
                                                         className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-red-500/10 text-red-500 transition-all flex items-center gap-2"
                                                     >
                                                         <span className="material-symbols-outlined text-sm">delete_forever</span>
@@ -607,7 +747,7 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                                 {isOwner ? (
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setSelectedTicket(t)}
+                                            onClick={(e) => { e.stopPropagation(); setSelectedTicket(t); }}
                                             className="px-6 py-2 bg-primary dark:bg-white text-white dark:text-primary rounded-xl text-sm font-bold shadow-lg hover:shadow-primary/20 dark:hover:shadow-white/10 transition-all hover:scale-105"
                                         >
                                             Gestionar
@@ -637,6 +777,7 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
                             className="bg-white dark:bg-sidebar w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
                         >
                             <div className="p-6 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
                                 <div>
