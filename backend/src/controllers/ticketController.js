@@ -33,7 +33,8 @@ const createTicket = async (req, res) => {
                 status: 'INICIAL',
                 isArchived: false,
                 revenue: 70000,
-                assignedToId: req.user.id, // Assigned to the creator
+                assignedToId: req.user.id, // Initial assignee
+                creatorId: req.user.id, // STORE THE CREATOR
                 media: {
                     create: req.files ? req.files.map(file => ({ url: file.path })) : [],
                 },
@@ -65,9 +66,12 @@ const getTickets = async (req, res) => {
             where.isArchived = false; // Default behavior
         }
 
-        // If not SUPERADMIN, only show assigned tickets
+        // If not SUPERADMIN, show tickets where user is assignee OR creator
         if (req.user.role !== 'SUPERADMIN') {
-            where.assignedToId = req.user.id;
+            where.OR = [
+                { assignedToId: req.user.id },
+                { creatorId: req.user.id }
+            ];
         }
 
         const tickets = await prisma.ticket.findMany({
@@ -157,6 +161,12 @@ const addFollowUp = async (req, res) => {
                 diagnosis,
                 protocol,
                 bonusInfo,
+                media: {
+                    create: req.files ? req.files.map(file => ({
+                        url: file.path,
+                        ticketId: id // Ensure it also belongs to the ticket
+                    })) : [],
+                }
             },
         });
 
@@ -304,6 +314,30 @@ const deleteTicket = async (req, res) => {
     }
 };
 
+const sendReport = async (req, res) => {
+    const { ticketId, email, pdfBase64, patientName } = req.body;
+
+    if (!email || !pdfBase64) {
+        return res.status(400).json({ message: 'Email y contenido del reporte son obligatorios' });
+    }
+
+    try {
+        // Trigger n8n with the PDF data
+        await triggerN8nWebhook({
+            ticketId,
+            email,
+            pdfBase64,
+            patientName,
+            sentBy: req.user.username
+        }, 'SEND_REPORT');
+
+        res.json({ message: 'Reporte enviado con éxito' });
+    } catch (error) {
+        console.error('Send Report Error:', error);
+        res.status(500).json({ message: 'Error al enviar el reporte' });
+    }
+};
+
 module.exports = {
     createTicket,
     getTickets,
@@ -312,5 +346,6 @@ module.exports = {
     getStats,
     reassignTicket,
     archiveTicket,
-    deleteTicket
+    deleteTicket,
+    sendReport
 };

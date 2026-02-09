@@ -430,7 +430,9 @@ const NewTicketForm = ({ user, onSuccess, isMobile }) => {
     );
 };
 
-const CaseDetailView = ({ ticket, onClose }) => {
+const CaseDetailView = ({ ticket, user, onClose }) => {
+    const [showShareModal, setShowShareModal] = useState(false);
+
     // Organizar seguimientos por fecha descendente
     const sortedFollowUps = [...(ticket.followUps || [])].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -471,8 +473,23 @@ const CaseDetailView = ({ ticket, onClose }) => {
                     <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
                         Caso #{ticket.id.replace(/-/g, '').slice(0, 8)} • {new Date(ticket.createdAt).toLocaleDateString()}
                     </p>
+                    <button
+                        onClick={() => setShowShareModal(true)}
+                        className="mt-2 px-6 py-2 bg-accent text-primary rounded-full font-bold text-xs flex items-center gap-2 hover:scale-105 transition-all shadow-md"
+                    >
+                        <span className="material-symbols-outlined text-sm">share</span>
+                        Enviar Caso
+                    </button>
                 </div>
             </div>
+
+            {showShareModal && (
+                <ReportShareModal
+                    ticket={ticket}
+                    user={user}
+                    onClose={() => setShowShareModal(false)}
+                />
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Diagnóstico e Info Inicial (Columna Izquierda) */}
@@ -535,6 +552,15 @@ const CaseDetailView = ({ ticket, onClose }) => {
                                                 <div className="text-sm text-gray-600 dark:text-gray-300">
                                                     <span className="font-bold text-accent text-xs uppercase block mb-1">Observaciones:</span>
                                                     {fu.content}
+                                                </div>
+                                            )}
+                                            {fu.media && fu.media.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-white/5">
+                                                    {fu.media.map((img, i) => (
+                                                        <div key={i} className="w-24 h-24 rounded-lg overflow-hidden cursor-zoom-in hover:scale-105 transition-all" onClick={() => window.open(`${API_URL}/${img.url}`, '_blank')}>
+                                                            <img src={`${API_URL}/${img.url}`} className="w-full h-full object-cover" alt="Proceso" />
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             )}
                                         </div>
@@ -620,7 +646,7 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                     <span className="material-symbols-outlined">arrow_back</span>
                     Volver al listado
                 </button>
-                <CaseDetailView ticket={viewingCase} />
+                <CaseDetailView ticket={viewingCase} user={user} onClose={() => setViewingCase(null)} />
             </div>
         );
     }
@@ -645,7 +671,7 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                 {tickets.map((t, idx) => {
                     // Check if Superadmin or owner to enable "Gestionar"
                     const isSuperAdmin = user.role === 'SUPERADMIN' || user.role === 'ADMIN';
-                    const isOwner = t.assignedToId === user.id || isSuperAdmin;
+                    const isOwner = t.assignedToId === user.id || t.creatorId === user.id || isSuperAdmin;
                     return (
                         <motion.div
                             key={t.id}
@@ -812,16 +838,21 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
 const FollowUpForm = ({ ticket, user, onDone, onDelete, onArchive }) => {
     const isSuperAdmin = user.role === 'SUPERADMIN' || user.role === 'ADMIN';
     const [form, setForm] = useState({ content: '', diagnosis: '', protocol: '', bonusInfo: '', status: ticket.status });
+    const [photos, setPhotos] = useState([]);
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
+        const data = new FormData();
+        Object.keys(form).forEach(key => data.append(key, form[key]));
+        photos.forEach(file => data.append('photos', file));
+
         try {
             await fetch(`${API_URL}/api/tickets/${ticket.id}/follow-up`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
-                body: JSON.stringify(form)
+                headers: { 'Authorization': `Bearer ${user.token}` },
+                body: data
             });
             onDone();
         } catch (err) { alert('Error al actualizar'); }
@@ -873,6 +904,44 @@ const FollowUpForm = ({ ticket, user, onDone, onDelete, onArchive }) => {
                         <option value="FINALIZADO">Finalizado</option>
                     </select>
                     <span className="material-symbols-outlined absolute right-4 top-3 pointer-events-none text-gray-400">expand_more</span>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <label className="text-sm font-bold text-accent ml-1 uppercase tracking-widest flex items-center gap-2">
+                    <span className="material-symbols-outlined">add_a_photo</span>
+                    Fotos de Avance / Proceso
+                </label>
+                <div className="flex flex-wrap gap-3">
+                    {photos.map((p, i) => (
+                        <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group">
+                            <img src={URL.createObjectURL(p)} className="w-full h-full object-cover" />
+                            <button
+                                type="button"
+                                onClick={() => setPhotos(photos.filter((_, idx) => idx !== i))}
+                                className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <span className="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    ))}
+                    {photos.length < 3 && (
+                        <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-accent transition-all text-gray-400 hover:text-accent">
+                            <span className="material-symbols-outlined">add</span>
+                            <span className="text-[8px] font-bold">PROCESO</span>
+                            <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                multiple
+                                onChange={e => {
+                                    const files = Array.from(e.target.files);
+                                    if (photos.length + files.length > 3) return alert('Máximo 3 fotos');
+                                    setPhotos([...photos, ...files]);
+                                }}
+                            />
+                        </label>
+                    )}
                 </div>
             </div>
 
@@ -1750,3 +1819,146 @@ const BrandManagement = ({ user }) => {
 
 
 export default Dashboard;
+const ReportShareModal = ({ ticket, user, onClose }) => {
+    const [loading, setLoading] = useState(false);
+
+    const generatePDF = () => {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Header
+        doc.setFillColor(41, 80, 38);
+        doc.rect(0, 0, pageWidth, 40, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text('REPORTE DE CASO PQR', 20, 25);
+        doc.setFontSize(10);
+        doc.text(`ID: ${ticket.id.toUpperCase()}`, pageWidth - 60, 25);
+
+        // Body - Patient Info
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text('DATOS DEL PACIENTE', 20, 55);
+        doc.line(20, 58, 190, 58);
+
+        doc.setFontSize(10);
+        doc.text(`Nombre: ${ticket.patientName}`, 25, 68);
+        doc.text(`Teléfono: ${ticket.phone}`, 25, 75);
+        doc.text(`Ciudad: ${ticket.city}`, 25, 82);
+        doc.text(`Correo: ${ticket.email || 'N/A'}`, 110, 68);
+        doc.text(`Creado el: ${new Date(ticket.createdAt).toLocaleDateString()}`, 110, 75);
+
+        // Diagnosis
+        doc.setFontSize(12);
+        doc.text('MOTIVO / DIAGNÓSTICO INICIAL', 20, 95);
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        const splitDesc = doc.splitTextToSize(ticket.description, 160);
+        doc.text(splitDesc, 25, 102);
+
+        // Evolution
+        let y = 130;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text('EVOLUCIÓN Y SEGUIMIENTO', 20, y);
+        doc.line(20, y + 3, 190, y + 3);
+        y += 15;
+
+        const followUps = [...(ticket.followUps || [])].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+        followUps.forEach((fu, i) => {
+            if (y > 250) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${new Date(fu.createdAt).toLocaleDateString()} - ${fu.diagnosis || 'Seguimiento'}`, 25, y);
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            const content = fu.content || fu.protocol || 'Sin observaciones detalladas.';
+            const splitContent = doc.splitTextToSize(content, 150);
+            doc.text(splitContent, 30, y + 7);
+            y += (splitContent.length * 5) + 15;
+        });
+
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Generado por ${user.username} - CriisApp`, 20, doc.internal.pageSize.getHeight() - 10);
+
+        return doc;
+    };
+
+    const handleShare = async (method) => {
+        const doc = generatePDF();
+
+        if (method === 'download') {
+            doc.save(`Reporte_${ticket.patientName.replace(/ /g, '_')}.pdf`);
+            onClose();
+        } else if (method === 'whatsapp') {
+            const ticketIdClean = ticket.id.replace(/-/g, '');
+            const msg = `Resumen de caso para: ${ticket.patientName}.\nPuede consultar el estado actualizado en: https://criisapp.nariionline.cloud\nID Caso: ${ticketIdClean}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+            onClose();
+        } else if (method === 'email') {
+            const destEmail = prompt("Ingrese el correo electrónico del destinatario:", ticket.email || "");
+            if (!destEmail) return;
+
+            setLoading(true);
+            try {
+                const pdfBase64 = doc.output('datauristring').split(',')[1];
+                const res = await fetch(`${API_URL}/api/tickets/send-report`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+                    body: JSON.stringify({
+                        ticketId: ticket.id,
+                        email: destEmail,
+                        pdfBase64,
+                        patientName: ticket.patientName
+                    })
+                });
+                if (res.ok) alert('Reporte enviado correctamente por correo');
+                else alert('Error al enviar el reporte');
+            } catch (err) {
+                alert('Error de conexión');
+            } finally {
+                setLoading(false);
+                onClose();
+            }
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex justify-center items-center p-4">
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white dark:bg-sidebar w-full max-w-sm rounded-[32px] overflow-hidden p-8 shadow-2xl border border-gray-100 dark:border-white/5">
+                <h4 className="text-xl font-serif font-bold dark:text-white text-center mb-6">Compartir Reporte</h4>
+                <div className="grid grid-cols-1 gap-4">
+                    <button onClick={() => handleShare('download')} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-white/5 hover:bg-accent hover:text-primary transition-all group border border-transparent hover:border-accent/30">
+                        <span className="material-symbols-outlined text-2xl text-accent">download</span>
+                        <div className="text-left">
+                            <p className="font-bold text-sm dark:text-white">Guardar PDF</p>
+                            <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Descarga Local</p>
+                        </div>
+                    </button>
+                    <button onClick={() => handleShare('whatsapp')} className="flex items-center gap-4 p-4 rounded-2xl bg-green-500/10 text-green-600 hover:bg-green-600 hover:text-white transition-all border border-green-500/20">
+                        <span className="material-symbols-outlined text-2xl">chat</span>
+                        <div className="text-left">
+                            <p className="font-bold text-sm">WhatsApp</p>
+                            <p className="text-[10px] opacity-60 uppercase font-bold tracking-tighter">Enviar Invitación</p>
+                        </div>
+                    </button>
+                    <button onClick={() => handleShare('email')} disabled={loading} className="flex items-center gap-4 p-4 rounded-2xl bg-blue-500/10 text-blue-600 hover:bg-blue-600 hover:text-white transition-all border border-blue-500/20 disabled:opacity-50">
+                        <span className="material-symbols-outlined text-2xl">{loading ? 'hourglass_top' : 'mail'}</span>
+                        <div className="text-left">
+                            <p className="font-bold text-sm">{loading ? 'Enviando...' : 'Correo Electrónico'}</p>
+                            <p className="text-[10px] opacity-60 uppercase font-bold tracking-tighter">Adjuntar PDF</p>
+                        </div>
+                    </button>
+                </div>
+                <button onClick={onClose} className="w-full mt-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-red-500 transition-colors">Cancelar</button>
+            </motion.div>
+        </div>
+    );
+};
