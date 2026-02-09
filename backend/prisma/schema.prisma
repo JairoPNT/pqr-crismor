@@ -13,11 +13,13 @@ model User {
   name      String?
   email     String?  @unique
   password  String
-  role      String   // "SUPERADMIN", "GESTOR"
+  role      String   // "SUPERADMIN", "GESTOR", "ENTIDAD"
   phone     String?
   avatar    String?  // URL or path to image
+  authCode  String?  @unique
   createdAt DateTime @default(now())
   tickets   Ticket[] @relation("AssignedTickets")
+  trainings Training[]
 }
 
 model Ticket {
@@ -63,4 +65,15 @@ model Media {
   ticket    Ticket   @relation(fields: [ticketId], references: [id])
   url       String   // Local path or URL
   createdAt DateTime @default(now())
+}
+
+model Training {
+  id              Int      @id @default(autoincrement())
+  startTime       DateTime
+  endTime         DateTime
+  entityId        Int
+  entity          User     @relation(fields: [entityId], references: [id])
+  status          String   @default("CONFIRMADA")
+  calendarEventId String?
+  createdAt       DateTime @default(now())
 }

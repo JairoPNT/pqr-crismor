@@ -1047,7 +1047,7 @@ const UserManagement = ({ user, users, onUpdate, isMobile }) => {
                     className="px-6 py-3 bg-primary dark:bg-white text-white dark:text-primary rounded-xl font-bold font-serif shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
                 >
                     <span className="material-symbols-outlined">person_add</span>
-                    Nuevo Gestor
+                    Nueva Entidad / Gestor
                 </button>
             </div>
 
@@ -1139,8 +1139,20 @@ const UserManagement = ({ user, users, onUpdate, isMobile }) => {
                                             <select className="input-dashboard w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 outline-none text-sm text-primary dark:text-white" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}>
                                                 <option value="GESTOR">Gestor</option>
                                                 <option value="SUPERADMIN">Super Admin</option>
+                                                <option value="ENTIDAD">Entidad / Empresa</option>
                                             </select>
                                         </div>
+                                        {editingUser.role === 'ENTIDAD' && (
+                                            <div className="space-y-2 animate-fade-in">
+                                                <label className="text-sm font-bold text-accent ml-1 uppercase tracking-widest">Código de Autorización</label>
+                                                <input
+                                                    className="input-dashboard w-full px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 outline-none text-sm text-primary dark:text-white font-mono tracking-widest"
+                                                    value={editingUser.authCode || ''}
+                                                    onChange={e => setEditingUser({ ...editingUser, authCode: e.target.value.toUpperCase() })}
+                                                    placeholder="Ej: SKN0001"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                     <button type="submit" disabled={loading} className="w-full py-4 bg-primary dark:bg-accent text-white dark:text-primary rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50">
                                         {loading ? 'Guardando...' : 'Guardar Cambios'}
@@ -1181,7 +1193,7 @@ const UserManagement = ({ user, users, onUpdate, isMobile }) => {
 
 
 const NewUserForm = ({ user, onDone }) => {
-    const [formData, setFormData] = useState({ username: '', name: '', email: '', password: '', confirmPassword: '', role: 'GESTOR', phone: '' });
+    const [formData, setFormData] = useState({ username: '', name: '', email: '', password: '', confirmPassword: '', role: 'GESTOR', phone: '', authCode: '' });
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -1256,6 +1268,7 @@ const NewUserForm = ({ user, onDone }) => {
                         >
                             <option value="GESTOR">Gestor Administrativo</option>
                             <option value="SUPERADMIN">Super Administrador</option>
+                            <option value="ENTIDAD">Entidad / Empresa</option>
                         </select>
                         <span className="material-symbols-outlined absolute right-4 top-3 pointer-events-none text-gray-400">expand_more</span>
                     </div>
@@ -1268,6 +1281,18 @@ const NewUserForm = ({ user, onDone }) => {
                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     />
                 </div>
+                {formData.role === 'ENTIDAD' && (
+                    <div className="space-y-2 animate-fade-in md:col-span-2">
+                        <label className="text-sm font-bold text-accent ml-1 uppercase tracking-widest">Código de Autorización Corporativo</label>
+                        <input
+                            className="input-dashboard w-full px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 outline-none text-sm text-primary dark:text-white font-mono tracking-widest"
+                            value={formData.authCode}
+                            onChange={e => setFormData({ ...formData, authCode: e.target.value.toUpperCase() })}
+                            placeholder="Ej: SKN0001"
+                            required
+                        />
+                    </div>
+                )}
             </div>
 
             <button

@@ -60,9 +60,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 app.use('/pictures', express.static('pictures'));
 
+const trainingRoutes = require('./src/routes/trainingRoutes');
+// ...
 // Routes middleware
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/training', trainingRoutes);
 
 app.get('/', (req, res) => {
     res.send('CriisApp Backend is running');

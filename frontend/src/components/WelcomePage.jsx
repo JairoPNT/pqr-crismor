@@ -80,7 +80,7 @@ const WelcomePage = ({ onNavigate, logo, favicon, horizontalLogo, activeManagers
                     {/* Tarjeta 1: Pacientes */}
                     <div
                         onClick={() => onNavigate('public')}
-                        className="glass-card p-6 sm:p-8 rounded-2xl group cursor-pointer relative overflow-hidden transform transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10"
+                        className="glass-card p-6 sm:p-8 rounded-2xl group cursor-pointer relative overflow-hidden transform transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 mb-6"
                     >
                         {/* Decoración hover */}
                         <div className="absolute top-0 right-0 w-40 h-40 bg-secondary/5 dark:bg-accent/10 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700 ease-out"></div>
@@ -100,6 +100,32 @@ const WelcomePage = ({ onNavigate, logo, favicon, horizontalLogo, activeManagers
                         <button className="w-full py-4 bg-primary dark:bg-accent text-white dark:text-primary rounded-xl shadow-lg shadow-primary/20 dark:shadow-accent/20 flex items-center justify-center gap-2 group-hover:bg-primary/90 dark:group-hover:bg-accent/90 transition-all font-medium text-sm tracking-wide transform group-hover:-translate-y-1">
                             <span>Consultar Ahora</span>
                             <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </button>
+                    </div>
+
+                    {/* Tarjeta 2: Entidades / Reservar */}
+                    <div
+                        onClick={() => onNavigate('booking')}
+                        className="glass-card p-6 sm:p-8 rounded-2xl group cursor-pointer relative overflow-hidden transform transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10"
+                    >
+                        {/* Decoración hover */}
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-accent/5 dark:bg-primary/10 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700 ease-out"></div>
+
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                            <div className="p-3 bg-white/80 dark:bg-white/10 rounded-xl text-accent dark:text-primary shadow-sm dark:shadow-none transition-colors">
+                                <span className="material-symbols-outlined text-3xl">calendar_month</span>
+                            </div>
+                            <span className="text-[10px] font-bold tracking-[0.2em] text-primary dark:text-accent uppercase bg-primary/5 dark:bg-accent/10 px-3 py-1 rounded-full border border-transparent dark:border-primary/20 h-fit">Entidades</span>
+                        </div>
+
+                        <h3 className="font-serif text-2xl sm:text-3xl font-bold text-primary dark:text-white mb-3 relative z-10 transition-colors">Agendar Capacitación</h3>
+                        <p className="text-sm sm:text-base text-primary/60 dark:text-gray-300 mb-8 font-light leading-relaxed relative z-10 transition-colors">
+                            Solicite espacios de formación técnica y profesional coordinados directamente con este portal de atención.
+                        </p>
+
+                        <button className="w-full py-4 border-2 border-primary dark:border-accent text-primary dark:text-accent rounded-xl hover:bg-primary dark:hover:bg-accent hover:text-white dark:hover:text-primary transition-all font-bold text-sm tracking-wide transform group-hover:-translate-y-1 flex items-center justify-center gap-2">
+                            <span>Reservar Espacio</span>
+                            <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">event_available</span>
                         </button>
                     </div>
 

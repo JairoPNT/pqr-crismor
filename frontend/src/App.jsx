@@ -3,6 +3,7 @@ import WelcomePage from './components/WelcomePage';
 import LoginPage from './components/LoginPage';
 import PublicTracker from './components/PublicTracker';
 import Dashboard from './components/Dashboard';
+import BookingPage from './components/BookingPage';
 import API_URL from './api';
 
 function App() {
@@ -130,6 +131,8 @@ function App() {
         );
       case 'public':
         return <PublicTracker onBack={() => setView('welcome')} logo={logoUrl} />;
+      case 'booking':
+        return <BookingPage onBack={() => setView('welcome')} logo={logoUrl} />;
       case 'dashboard':
         return user ? (
           <Dashboard
