@@ -62,14 +62,14 @@ const PublicTracker = ({ onBack, logo }) => {
                     {/* Header Original Centrado */}
                     <div className="flex flex-col items-center mb-8 mt-6 text-center">
                         {/* Logo */}
-                        <div className="w-16 h-16 mb-5 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white shadow-xl shadow-secondary/20 overflow-hidden">
+                        <div className="w-16 h-16 mb-5 rounded-full bg-white flex items-center justify-center shadow-xl shadow-black/5 overflow-hidden border border-gray-100">
                             <img
                                 src={logo || logoSkinHealth}
                                 alt="Logo"
-                                className="w-10 h-10 object-contain"
+                                className="w-14 h-14 object-contain"
                                 onError={(e) => {
                                     e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = '<span class="material-symbols-outlined text-3xl">search_check</span>';
+                                    e.target.parentElement.innerHTML = '<span class="material-symbols-outlined text-3xl text-primary">search_check</span>';
                                 }}
                             />
                         </div>

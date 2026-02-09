@@ -65,14 +65,14 @@ const LoginPage = ({ onLogin, onBack, logo }) => {
                         </button>
 
                         {/* Logo Animado */}
-                        <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white shadow-xl shadow-secondary/20 mt-8 sm:mt-0 overflow-hidden">
+                        <div className="w-16 h-16 mb-4 rounded-full bg-white flex items-center justify-center shadow-xl shadow-black/5 mt-8 sm:mt-0 overflow-hidden border border-gray-100">
                             <img
                                 src={logo || logoSkinHealth}
                                 alt="Logo"
-                                className="w-10 h-10 object-contain"
+                                className="w-14 h-14 object-contain"
                                 onError={(e) => {
                                     e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = '<span class="material-symbols-outlined text-3xl">spa</span>';
+                                    e.target.parentElement.innerHTML = '<span class="material-symbols-outlined text-3xl text-primary">spa</span>';
                                 }}
                             />
                         </div>
