@@ -8,7 +8,6 @@ const {
     getStats,
     reassignTicket,
     archiveTicket,
-    archiveTicket,
     deleteTicket,
     sendReport
 } = require('../controllers/ticketController');

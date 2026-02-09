@@ -16,8 +16,9 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
-# Expose the volume for persistent storage
+# Expose the volumes for persistent storage
 VOLUME /app/uploads
+VOLUME /app/pictures
 
 # Expose the port the app runs on
 EXPOSE 80

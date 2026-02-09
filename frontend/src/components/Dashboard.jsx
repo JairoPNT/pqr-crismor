@@ -116,6 +116,7 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
 
     if (user.role === 'SUPERADMIN') {
         navItems.push({ id: 'users', label: 'Gestión Usuarios', icon: 'group' });
+        navItems.push({ id: 'trainings', label: 'Gestión Capacitaciones', icon: 'calendar_month' });
         navItems.push({ id: 'settings', label: 'Configuración', icon: 'settings' });
     }
 
@@ -128,6 +129,7 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
         'reports': { title: 'Informes de Gestión', desc: 'Genera reportes detallados y descarga en formato PDF.' },
         'stats': { title: 'Análisis de Gestión', desc: 'Monitoreo en tiempo real del rendimiento y distribución de PQRs.' },
         'users': { title: 'Gestión de Usuarios', desc: 'Administra los accesos y roles de los gestores del sistema.' },
+        'trainings': { title: 'Gestión de Capacitaciones', desc: 'Administra y supervisa las reservas de capacitación de las entidades.' },
         'profile': { title: 'Mi Perfil', desc: 'Gestiona tu información personal y credenciales de acceso.' },
         'settings': { title: 'Identidad Visual', desc: 'Personaliza el logotipo y favicon de la aplicación.' }
     };
@@ -139,6 +141,7 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
             case 'reports': return <ReportsView tickets={tickets} user={user} users={users} isMobile={isMobile} />;
             case 'stats': return <StatsView stats={stats} users={users} user={user} onRefresh={fetchStats} isMobile={isMobile} />;
             case 'users': return <UserManagement user={user} users={users} onUpdate={fetchUsers} isMobile={isMobile} />;
+            case 'trainings': return <TrainingsView user={user} isMobile={isMobile} />;
             case 'profile': return <ProfileView user={user} onUpdate={handleProfileUpdate} isMobile={isMobile} />;
             case 'settings': return <BrandManagement user={user} />;
             default: return <NewTicketForm user={user} onSuccess={() => { setView('list'); fetchTickets(); }} isMobile={isMobile} />;
@@ -1812,6 +1815,95 @@ const BrandManagement = ({ user }) => {
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    );
+};
+
+
+const TrainingsView = ({ user, isMobile }) => {
+    const [trainings, setTrainings] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchTrainings = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/training`, {
+                headers: { 'Authorization': `Bearer ${user.token}` }
+            });
+            const data = await response.json();
+            setTrainings(data);
+        } catch (err) { console.error('Error fetching trainings:', err); }
+        finally { setLoading(false); }
+    };
+
+    useEffect(() => {
+        fetchTrainings();
+    }, []);
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) return;
+        try {
+            const response = await fetch(`${API_URL}/api/training/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${user.token}` }
+            });
+            if (response.ok) {
+                alert('Reserva eliminada con éxito');
+                fetchTrainings();
+            }
+        } catch (err) { alert('Error al eliminar'); }
+    };
+
+    if (loading) return <div className="text-center p-12 italic opacity-50">Cargando capacitaciones...</div>;
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            <div className="grid gap-4">
+                {trainings.length > 0 ? trainings.map((t, idx) => (
+                    <motion.div
+                        key={t.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="glass-panel p-5 md:p-6 rounded-2xl border border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6"
+                    >
+                        <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-3">
+                                <span className="bg-accent/10 text-accent px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border border-accent/10">
+                                    {t.status}
+                                </span>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Reserva #{t.id}</span>
+                            </div>
+                            <h4 className="text-lg font-bold text-primary dark:text-white">{t.entity?.name || t.entity?.username}</h4>
+                            <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                                <div className="flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">event</span>
+                                    {new Date(t.startTime).toLocaleDateString()}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">schedule</span>
+                                    {new Date(t.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(t.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                {t.calendarEventId && (
+                                    <div className="flex items-center gap-1 text-success">
+                                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                                        Google Calendar
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => handleDelete(t.id)}
+                            className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-500/20"
+                        >
+                            <span className="material-symbols-outlined">delete</span>
+                        </button>
+                    </motion.div>
+                )) : (
+                    <div className="text-center py-20 bg-gray-50/50 dark:bg-black/10 rounded-3xl border border-dashed border-gray-200 dark:border-white/10 italic text-gray-400">
+                        No hay reservas programadas aún.
+                    </div>
+                )}
             </div>
         </div>
     );

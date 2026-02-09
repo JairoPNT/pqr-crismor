@@ -71,4 +71,36 @@ const bookTraining = async (req, res) => {
     }
 };
 
-module.exports = { getAvailability, bookTraining };
+const getAllTrainings = async (req, res) => {
+    try {
+        if (req.user.role !== 'SUPERADMIN') {
+            return res.status(403).json({ message: 'No autorizado' });
+        }
+
+        const trainings = await prisma.training.findMany({
+            include: { entity: { select: { name: true, username: true } } },
+            orderBy: { startTime: 'desc' }
+        });
+        res.json(trainings);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener capacitaciones', error: error.message });
+    }
+};
+
+const deleteTraining = async (req, res) => {
+    const { id } = req.params;
+    try {
+        if (req.user.role !== 'SUPERADMIN') {
+            return res.status(403).json({ message: 'No autorizado' });
+        }
+
+        await prisma.training.delete({
+            where: { id: parseInt(id) }
+        });
+        res.json({ message: 'Capacitación eliminada con éxito' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al eliminar capacitación', error: error.message });
+    }
+};
+
+module.exports = { getAvailability, bookTraining, getAllTrainings, deleteTraining };

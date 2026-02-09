@@ -42,18 +42,25 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
+        if (!origin) {
+            console.log('CORS: Request with no origin (e.g., local script or direct access)');
+            return callback(null, true);
+        }
         const isAllowed = allowedOrigins.includes(origin) ||
             origin.includes('criisapp') ||
-            origin.includes('localhost');
+            origin.includes('localhost') ||
+            origin.includes('127.0.0.1');
+
         if (isAllowed) {
             callback(null, true);
         } else {
-            console.log('CORS Blocked for origin:', origin);
-            callback(new Error('Not allowed by CORS'));
+            console.log('CORS: Blocked for origin:', origin);
+            callback(new Error(`Not allowed by CORS: ${origin}`));
         }
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

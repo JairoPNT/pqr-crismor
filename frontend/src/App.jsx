@@ -78,7 +78,7 @@ function App() {
   useEffect(() => {
     if (!user) return;
 
-    const INACTIVITY_LIMIT = 24 * 60 * 60 * 1000; // 24 horas
+    const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutos
 
     const handleUserActivity = () => {
       setLastActivity(Date.now());
