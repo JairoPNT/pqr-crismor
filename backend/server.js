@@ -70,6 +70,15 @@ app.use('/pictures', express.static('pictures'));
 const trainingRoutes = require('./src/routes/trainingRoutes');
 // ...
 // Routes middleware
+app.get('/api/diag-google', (req, res) => {
+    res.json({
+        GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
+        GOOGLE_REFRESH_TOKEN: !!process.env.GOOGLE_REFRESH_TOKEN,
+        GOOGLE_CALENDAR_ID: !!process.env.GOOGLE_CALENDAR_ID,
+        GOOGLE_SECONDARY_CALENDAR_ID: !!process.env.GOOGLE_SECONDARY_CALENDAR_ID
+    });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/training', trainingRoutes);

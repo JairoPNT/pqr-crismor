@@ -137,6 +137,7 @@ const getAvailableSlots = async (dateStr, durationHours, customCalendarId = null
     const workEnd = new Date(`${dateStr}T18:00:00-05:00`);
 
     const calendarIds = getCalendarIds(customCalendarId);
+    console.log(`DEBUG: Buscando slots para ${dateStr}, IDs:`, JSON.stringify(calendarIds));
 
     try {
         const response = await calendar.freebusy.query({
@@ -154,6 +155,8 @@ const getAvailableSlots = async (dateStr, durationHours, customCalendarId = null
                 busy = [...busy, ...calendars[cal.id].busy];
             }
         });
+
+        console.log(`DEBUG: Bloques ocupados encontrados:`, busy.length, JSON.stringify(busy));
 
         const slots = [];
         let current = new Date(workStart);
