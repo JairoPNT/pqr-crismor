@@ -440,8 +440,47 @@ const NewTicketForm = ({ user, onSuccess, isMobile }) => {
     );
 };
 
-const CaseDetailView = ({ ticket, user, onClose }) => {
+const CaseDetailView = ({ ticket: initialTicket, user, onClose, onUpdate }) => {
+    const [ticket, setTicket] = useState(initialTicket);
+    const [isEditingInfo, setIsEditingInfo] = useState(false);
+    const [editForm, setEditForm] = useState({
+        patientName: ticket.patientName,
+        phone: ticket.phone,
+        email: ticket.email,
+        city: ticket.city
+    });
+    const [saving, setSaving] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
+
+    const handleSaveInfo = async () => {
+        setSaving(true);
+        try {
+            const response = await fetch(`${API_URL}/api/tickets/${ticket.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify(editForm)
+            });
+
+            if (response.ok) {
+                const updatedTicket = await response.json();
+                // Merge with existing ticket to keep relations (followUps, media, etc)
+                const mergedTicket = { ...ticket, ...updatedTicket };
+                setTicket(mergedTicket);
+                setIsEditingInfo(false);
+                if (onUpdate) onUpdate(); // Trigger refresh in list if needed
+            } else {
+                const err = await response.json();
+                alert(err.message || 'Error al actualizar información');
+            }
+        } catch (err) {
+            alert('Error de conexión');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     // Organizar seguimientos por fecha descendente
     const sortedFollowUps = [...(ticket.followUps || [])].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -450,26 +489,105 @@ const CaseDetailView = ({ ticket, user, onClose }) => {
         <div className="space-y-8 animate-fade-in pb-10">
             {/* Header / Datos Personales (Estilo CV) */}
             <div className="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-gray-100 dark:border-white/5 pb-8">
-                <div className="flex items-start gap-5">
-                    <div className="w-20 h-20 rounded-2xl bg-primary/10 dark:bg-white/5 flex items-center justify-center text-primary dark:text-accent shadow-inner border border-primary/5">
+                <div className="flex items-start gap-5 flex-1 w-full">
+                    <div className="w-20 h-20 rounded-2xl bg-primary/10 dark:bg-white/5 flex items-center justify-center text-primary dark:text-accent shadow-inner border border-primary/5 shrink-0">
                         <span className="material-symbols-outlined text-4xl">person</span>
                     </div>
-                    <div className="space-y-1">
-                        <h2 className="text-3xl font-serif font-bold text-primary dark:text-white leading-tight">{ticket.patientName}</h2>
-                        <div className="flex flex-wrap gap-4 text-sm font-medium text-gray-400">
-                            <div className="flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-sm">mail</span>
-                                {ticket.email || 'Sin correo'}
+                    <div className="space-y-1 flex-1">
+                        {isEditingInfo ? (
+                            <div className="space-y-3">
+                                <input
+                                    type="text"
+                                    className="text-2xl font-serif font-bold text-primary dark:text-white bg-white/50 dark:bg-black/20 border border-accent/30 rounded-lg px-3 py-1 w-full outline-none focus:border-accent"
+                                    value={editForm.patientName}
+                                    onChange={e => setEditForm({ ...editForm, patientName: e.target.value })}
+                                    placeholder="Nombre del Paciente"
+                                />
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div className="flex items-center gap-2 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg px-2">
+                                        <span className="material-symbols-outlined text-xs text-gray-400">mail</span>
+                                        <input
+                                            type="email"
+                                            className="bg-transparent text-xs py-2 outline-none w-full dark:text-gray-300"
+                                            value={editForm.email}
+                                            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                                            placeholder="Correo"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg px-2">
+                                        <span className="material-symbols-outlined text-xs text-gray-400">call</span>
+                                        <input
+                                            type="tel"
+                                            className="bg-transparent text-xs py-2 outline-none w-full dark:text-gray-300"
+                                            value={editForm.phone}
+                                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                                            placeholder="Teléfono"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg px-2">
+                                        <span className="material-symbols-outlined text-xs text-gray-400">location_on</span>
+                                        <input
+                                            type="text"
+                                            className="bg-transparent text-xs py-2 outline-none w-full dark:text-gray-300"
+                                            value={editForm.city}
+                                            onChange={e => setEditForm({ ...editForm, city: e.target.value })}
+                                            placeholder="Ciudad"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 pt-2">
+                                    <button
+                                        onClick={handleSaveInfo}
+                                        disabled={saving}
+                                        className="px-4 py-1.5 bg-success text-white rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-success/80 transition-all disabled:opacity-50"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">{saving ? 'sync' : 'check'}</span>
+                                        {saving ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsEditingInfo(false);
+                                            setEditForm({
+                                                patientName: ticket.patientName,
+                                                phone: ticket.phone,
+                                                email: ticket.email,
+                                                city: ticket.city
+                                            });
+                                        }}
+                                        className="px-4 py-1.5 bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-bold hover:bg-gray-300 dark:hover:bg-white/20 transition-all"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-sm">call</span>
-                                {ticket.phone}
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-sm">location_on</span>
-                                {ticket.city}
-                            </div>
-                        </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-3xl font-serif font-bold text-primary dark:text-white leading-tight">{ticket.patientName}</h2>
+                                    <button
+                                        onClick={() => setIsEditingInfo(true)}
+                                        className="p-1.5 rounded-full hover:bg-accent/10 text-gray-400 hover:text-accent transition-all group"
+                                        title="Editar información básica"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">edit</span>
+                                    </button>
+                                </div>
+                                <div className="flex flex-wrap gap-4 text-sm font-medium text-gray-400">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-sm">mail</span>
+                                        {ticket.email || 'Sin correo'}
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-sm">call</span>
+                                        {ticket.phone}
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-sm">location_on</span>
+                                        {ticket.city}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -656,7 +774,7 @@ const TicketList = ({ tickets, user, users, onUpdate, isMobile, showArchived, se
                     <span className="material-symbols-outlined">arrow_back</span>
                     Volver al listado
                 </button>
-                <CaseDetailView ticket={viewingCase} user={user} onClose={() => setViewingCase(null)} />
+                <CaseDetailView ticket={viewingCase} user={user} onClose={() => setViewingCase(null)} onUpdate={onUpdate} />
             </div>
         );
     }

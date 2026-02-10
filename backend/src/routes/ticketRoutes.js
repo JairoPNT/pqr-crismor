@@ -9,7 +9,8 @@ const {
     reassignTicket,
     archiveTicket,
     deleteTicket,
-    sendReport
+    sendReport,
+    updateTicketInfo
 } = require('../controllers/ticketController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -21,6 +22,7 @@ router.get('/public/:id', getTicketByPublicId);
 // Private routes (Gestor/Admin)
 router.post('/', protect, upload.array('photos', 3), createTicket);
 router.get('/', protect, getTickets);
+router.put('/:id', protect, updateTicketInfo);
 router.post('/:id/follow-up', protect, upload.array('photos', 3), addFollowUp);
 router.get('/stats', protect, getStats);
 router.put('/:id/reassign', protect, reassignTicket);

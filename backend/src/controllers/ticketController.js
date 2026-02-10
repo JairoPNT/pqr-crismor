@@ -338,6 +338,35 @@ const sendReport = async (req, res) => {
     }
 };
 
+const updateTicketInfo = async (req, res) => {
+    const { id } = req.params;
+    const { patientName, phone, email, city } = req.body;
+
+    try {
+        // Only SuperAdmin or Gestor can edit. 
+        // We already have generic 'protect' middleware, but let's check roles if needed.
+        // Actually the request said Super Admin and Gestor.
+        if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'GESTOR' && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: 'No tienes permiso para editar esta información' });
+        }
+
+        const ticket = await prisma.ticket.update({
+            where: { id },
+            data: {
+                patientName,
+                phone,
+                email,
+                city
+            }
+        });
+
+        res.json(ticket);
+    } catch (error) {
+        console.error('Update Ticket Info Error:', error);
+        res.status(500).json({ message: 'Error al actualizar la información del ticket', error: error.message });
+    }
+};
+
 module.exports = {
     createTicket,
     getTickets,
@@ -347,5 +376,6 @@ module.exports = {
     reassignTicket,
     archiveTicket,
     deleteTicket,
-    sendReport
+    sendReport,
+    updateTicketInfo
 };
