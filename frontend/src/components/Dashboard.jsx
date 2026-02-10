@@ -204,15 +204,6 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
                 </nav>
 
                 <div className="p-4 border-t border-white/10 space-y-2">
-                    <button
-                        onClick={toggleDarkMode}
-                        className="flex items-center justify-center gap-2 w-full py-3 border border-white/10 rounded-lg text-sm text-gray-300 hover:bg-white/5 transition-all group"
-                    >
-                        <span className="material-symbols-outlined text-lg group-hover:rotate-45 transition-transform">
-                            {isDark ? 'light_mode' : 'dark_mode'}
-                        </span>
-                        Cambiar Tema
-                    </button>
                     <button onClick={onLogout} className="flex items-center justify-center gap-2 w-full py-3 border border-white/20 rounded-lg text-sm text-gray-300 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all">
                         <span className="material-symbols-outlined text-lg">logout</span>
                         Cerrar Sesión
@@ -240,14 +231,6 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
                         />
                     </div>
                     <div className="flex items-center gap-1">
-                        <button
-                            onClick={toggleDarkMode}
-                            className="p-2 rounded-lg text-primary dark:text-white hover:bg-gray-100 dark:hover:bg-white/10"
-                        >
-                            <span className="material-symbols-outlined text-xl">
-                                {isDark ? 'light_mode' : 'dark_mode'}
-                            </span>
-                        </button>
                         <button onClick={toggleSidebar} className="p-2 rounded-lg text-primary dark:text-white hover:bg-gray-100 dark:hover:bg-white/10">
                             <span className="material-symbols-outlined text-xl">menu</span>
                         </button>
@@ -285,6 +268,15 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
                     </div>
                 </div>
             </main>
+
+            <button
+                onClick={toggleDarkMode}
+                className="fixed bottom-6 right-6 w-12 h-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur text-primary dark:text-accent rounded-full shadow-lg border border-white dark:border-gray-700 flex items-center justify-center hover:scale-110 transition-all z-50 group"
+            >
+                <span className="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">
+                    {isDark ? 'light_mode' : 'dark_mode'}
+                </span>
+            </button>
         </div>
     );
 };
