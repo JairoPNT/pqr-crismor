@@ -262,7 +262,7 @@ const Dashboard = ({ user: initialUser, onLogout, initialLogo }) => {
                             {renderContent()}
                         </motion.div>
                         <footer className="mt-12 text-center text-[10px] text-gray-400 pb-6 space-y-1">
-                            <p>© 2026 CriisApp - Panel de Gestión v2.0</p>
+                            <p>© 2026 CriisApp - Panel de Gestión v2.1</p>
                             <p>Desarrollado por <a href="https://maeva.studio" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors font-semibold">Maeva Studio</a></p>
                         </footer>
                     </div>
