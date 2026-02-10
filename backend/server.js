@@ -70,6 +70,7 @@ app.use('/pictures', express.static('pictures'));
 const trainingRoutes = require('./src/routes/trainingRoutes');
 // ...
 // Routes middleware
+app.get('/api/test-managers', (req, res) => res.json({ message: 'Ruta de prueba funcionando' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/training', trainingRoutes);
