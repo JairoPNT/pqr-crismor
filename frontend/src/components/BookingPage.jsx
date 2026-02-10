@@ -124,15 +124,33 @@ const BookingPage = ({ onBack }) => {
             const isSelected = formData.date === dStr;
             const isPast = new Date(dStr + 'T23:59:59') < new Date();
 
-            // Lógica de colores según ocupación
-            // Rojo: >= 8 slots ocupados (asumiendo jornada de 10h)
-            // Verde: > 0 y < 8 slots ocupados
-            // Sin color: 0 slots ocupados
+            // Lógica de colores basada en horas ocupadas reales
             const slotsToFilter = Array.isArray(busySlots) ? busySlots : [];
-            const dayBusyCount = slotsToFilter.filter(s => s.start && s.start.startsWith(dStr)).length;
+
+            // Filtrar eventos del día
+            const dayEvents = slotsToFilter.filter(s => {
+                if (!s.start || !s.end) return false;
+                // Convertir a fecha local para comparar día
+                const eventStart = new Date(s.start);
+                return eventStart.getDate() === d && eventStart.getMonth() === m && eventStart.getFullYear() === y;
+            });
+
+            // Calcular horas totales ocupadas
+            let totalBusyHours = 0;
+            dayEvents.forEach(event => {
+                const start = new Date(event.start);
+                const end = new Date(event.end);
+                // Diferencia en horas
+                const duration = (end - start) / (1000 * 60 * 60);
+                totalBusyHours += duration;
+            });
+
+            // Asumiendo jornada laboral de 10 horas (8am - 6pm)
+            // Rojo: >= 8 horas ocupadas (casi lleno)
+            // Verde: > 0 y < 8 horas ocupadas (parcial)
             let statusColor = "";
-            if (dayBusyCount >= 8) statusColor = "bg-red-500";
-            else if (dayBusyCount > 0) statusColor = "bg-green-500";
+            if (totalBusyHours >= 8) statusColor = "bg-red-500";
+            else if (totalBusyHours > 0) statusColor = "bg-green-500";
 
             cells.push(
                 <button

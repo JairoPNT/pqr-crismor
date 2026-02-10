@@ -115,14 +115,7 @@ const getBusySlots = async (start, end, customCalendarId = null) => {
             }
         });
 
-        return busy.filter(event => {
-            const bStart = new Date(event.start);
-            const bEnd = new Date(event.end);
-            const dayStr = bStart.toISOString().split('T')[0];
-            const workStart = new Date(`${dayStr}T08:00:00-05:00`);
-            const workEnd = new Date(`${dayStr}T18:00:00-05:00`);
-            return (bStart < workEnd && bEnd > workStart);
-        });
+        return busy;
     } catch (error) {
         console.error('Error fetching busy slots:', error.message);
         return [];
