@@ -70,14 +70,44 @@ app.use('/pictures', express.static('pictures'));
 const trainingRoutes = require('./src/routes/trainingRoutes');
 // ...
 // Routes middleware
-app.get('/api/diag-google', (req, res) => {
-    res.json({
-        GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
-        GOOGLE_REFRESH_TOKEN: !!process.env.GOOGLE_REFRESH_TOKEN,
-        GOOGLE_CALENDAR_ID: !!process.env.GOOGLE_CALENDAR_ID,
-        GOOGLE_SECONDARY_CALENDAR_ID: !!process.env.GOOGLE_SECONDARY_CALENDAR_ID
-    });
+app.get('/api/diag-google', async (req, res) => {
+    try {
+        const { google } = require('googleapis');
+        const oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            'https://developers.google.com/oauthplayground'
+        );
+
+        if (!process.env.GOOGLE_REFRESH_TOKEN) throw new Error('Refresh Token faltante');
+
+        oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+        const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+        // Intento de conexión real
+        const response = await calendar.calendarList.list({ maxResults: 1 });
+
+        res.json({
+            status: 'success',
+            env_vars: {
+                CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
+                SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
+                REFRESH_TOKEN: !!process.env.GOOGLE_REFRESH_TOKEN,
+                CALENDAR_ID: !!process.env.GOOGLE_CALENDAR_ID
+            },
+            connection: 'OK',
+            calendar_sample: response.data.items?.[0]?.id || 'No calendars found'
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message,
+            env_debug: {
+                CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID.substring(0, 5) + '...' : 'MISSING',
+                REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN ? process.env.GOOGLE_REFRESH_TOKEN.substring(0, 5) + '...' : 'MISSING'
+            }
+        });
+    }
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
